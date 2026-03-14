@@ -1,39 +1,95 @@
 <% layout("/layouts/boilerplate") %>
 
-<h3>All Listings</h3>
+<div class="d-flex justify-content-between align-items-center mt-3">
+  <div>
+    <h3 class="mb-0">Stays nearby</h3>
+    <p class="text-muted mb-0" style="font-size: 0.9rem;">
+      Explore rooms and apartments tailored for your next stay.
+    </p>
+  </div>
+</div>
 
-<!--
-<form method="GET" action="/listings/new">
-  <button>Create new Listing</button>
-</form>
--->
+<div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
+  <% if (allListing && allListing.length > 0) { %>
+    <% allListing.forEach(function (listing) { %>
+      <div class="col mb-4">
+        <a
+          href="/listings/<%= listing._id %>"
+          class="listing-link text-decoration-none text-dark"
+        >
+          <div class="card h-100">
+            <div
+              id="carousel-<%= listing._id %>"
+              class="carousel slide"
+              data-bs-ride="carousel"
+              data-bs-interval="5000"
+            >
+              <div class="carousel-inner">
+                <% const hasImages = listing.images && listing.images.length > 0; %>
+                <% if (hasImages) { %>
+                  <% listing.images.forEach(function (img, idx) { %>
+                    <div class="carousel-item <%= idx === 0 ? 'active' : '' %>">
+                      <img
+                        src="<%= img %>"
+                        class="d-block w-100"
+                        alt="listing_image"
+                        style="height: 15rem; object-fit: cover;"
+                      />
+                    </div>
+                  <% }) %>
+                <% } else { %>
+                  <div class="carousel-item active">
+                    <img
+                      src="<%= listing.image %>"
+                      class="d-block w-100"
+                      alt="listing_image"
+                      style="height: 15rem; object-fit: cover;"
+                    />
+                  </div>
+                <% } %>
+              </div>
 
-<div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1">
-  <% for (let listing of allListing) { %>
-    <a
-      href="/listings/<%= listing._id %>"
-      class="listing-link"
-    >
-      <div class="card" style="width: 15rem;">
-        <img
-          src="<%= listing.image %>"
-          class="card-img-top"
-          alt="listing_image"
-          style="height: 15rem;"
-        />
+              <% if (hasImages && listing.images.length > 1) { %>
+                <button
+                  class="carousel-control-prev"
+                  type="button"
+                  data-bs-target="#carousel-<%= listing._id %>"
+                  data-bs-slide="prev"
+                  style="width: 12%;"
+                >
+                  <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                  <span class="visually-hidden">Previous</span>
+                </button>
+                <button
+                  class="carousel-control-next"
+                  type="button"
+                  data-bs-target="#carousel-<%= listing._id %>"
+                  data-bs-slide="next"
+                  style="width: 12%;"
+                >
+                  <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                  <span class="visually-hidden">Next</span>
+                </button>
+              <% } %>
+            </div>
 
-        <div class="card-img-overlay"></div>
-
-        <div class="card-body">
-          <p class="card-text">
-            <b><%= listing.title %></b>
-            <br />
-            &#8377;
-            <%= listing.price.toLocaleString("en-IN") %>
-            / night
-          </p>
-        </div>
+            <div class="card-body">
+              <p class="card-text mb-1">
+                <b><%= listing.title %></b>
+              </p>
+              <p class="card-text">
+                &#8377;
+                <%= listing.price.toLocaleString("en-IN") %>
+                / night
+              </p>
+            </div>
+          </div>
+        </a>
       </div>
-    </a>
+    <% }); %>
+  <% } else { %>
+    <div class="col">
+      <p>No listings match your search. Try adjusting the price range or location (for example, "Graphic Era Hill University").</p>
+    </div>
   <% } %>
 </div>

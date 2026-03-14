@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WanderLust</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StayBee | Stays & Rooms</title>
     <link rel="stylesheet" href="/css/style.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
@@ -15,9 +15,94 @@
         <%- body %>
     </div>
 
+    <!-- Search Modal -->
+    <div
+      class="modal fade"
+      id="searchModal"
+      tabindex="-1"
+      aria-labelledby="searchModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="searchModalLabel">Search Listings</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <form method="GET" action="/listings">
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="modalMinPrice" class="form-label">Min price (₹)</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="modalMinPrice"
+                  name="minPrice"
+                  placeholder="e.g. 500"
+                  value="<%= (typeof filters !== 'undefined' && filters.minPrice) ? filters.minPrice : '' %>"
+                />
+              </div>
+              <div class="mb-3">
+                <label for="modalMaxPrice" class="form-label">Max price (₹)</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="modalMaxPrice"
+                  name="maxPrice"
+                  placeholder="e.g. 2000"
+                  value="<%= (typeof filters !== 'undefined' && filters.maxPrice) ? filters.maxPrice : '' %>"
+                />
+              </div>
+              <div class="mb-3">
+                <label for="modalLocation" class="form-label">Location</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="modalLocation"
+                  name="location"
+                  placeholder="e.g. Graphic Era Hill University"
+                  value="<%= (typeof filters !== 'undefined' && filters.location) ? filters.location : '' %>"
+                />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Close
+              </button>
+              <button type="submit" class="btn btn-primary">
+                Search
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
 
     <%- include("../includes/footer.ejs") %>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        if (window.bootstrap && window.bootstrap.Carousel) {
+          var carousels = document.querySelectorAll(".carousel");
+          carousels.forEach(function (el) {
+            new bootstrap.Carousel(el, {
+              interval: 5000,
+              ride: "carousel",
+              pause: "hover",
+            });
+          });
+        }
+      });
+    </script>
 </body>
 </html>

@@ -7,6 +7,7 @@ const listingSchema = new Schema({
     required: true,
   },
   description: String,
+  // Primary image (kept for backward compatibility)
   image: {
     type: String,
     default:
@@ -15,6 +16,11 @@ const listingSchema = new Schema({
       v === ""
         ? "https://images.unsplash.com/photo-1519046904884-53103b34b206?q=80&w=1170&auto=format&fit=crop"
         : v,
+  },
+  // New: support multiple images per listing
+  images: {
+    type: [String],
+    default: [],
   },
   price: Number,
   location: String,

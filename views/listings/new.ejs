@@ -1,9 +1,9 @@
 <% layout("/layouts/boilerplate") %>
-<div class="row">
-  <div class="col-4 offset-4">
-    <h2 class="ms-4 mb-3">Create New Listing</h2>
-    <form method="POST" action="/listings">
-      <div class="mb-3 ms-4">
+<div class="row justify-content-center mt-4">
+  <div class="col-12 col-md-8 col-lg-6">
+    <h2 class="mb-3">Create New Listing</h2>
+    <form method="POST" action="/listings" enctype="multipart/form-data" class="p-3 p-md-4 rounded-4 border bg-white shadow-sm">
+      <div class="mb-3">
         <label for="title" class="form-label">Title</label>
         <br />
         <input
@@ -14,24 +14,30 @@
         />
       </div>
 
-      <div class="mb-3 ms-4">
+      <div class="mb-3">
         <label for="description" class="form-label">Description</label>
         <br />
 
         <textarea name="listing[description]" class="form-control"></textarea>
       </div>
-      <div class="mb-3 ms-4">
-        <label for="image" class="form-label">Image Link</label>
+      <div class="mb-3">
+        <label for="images" class="form-label">Upload Images</label>
         <br />
-
         <input
-          name="listing[image]"
-          placeholder="Enter image URL/Link"
+          type="file"
+          id="images"
+          name="images"
           class="form-control"
+          accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+          multiple
+          required
         />
+        <div class="form-text">
+          You can select multiple images. Supported formats: JPG, JPEG, PNG.
+        </div>
       </div>
       <div class="row">
-        <div class="mb-3 ms-4 col-md-4">
+        <div class="mb-3 col-md-4">
           <label for="price" class="form-label">Price</label>
           <br />
 
@@ -42,7 +48,7 @@
             class="form-control"
           />
         </div>
-        <div class="mb-3 ms-4 col-md-6">
+        <div class="mb-3 col-md-8">
           <label for="country" class="form-label">Country</label>
           <br />
 
@@ -55,7 +61,7 @@
         </div>
       </div>
 
-      <div class="mb-3 ms-4">
+      <div class="mb-3">
         <label for="location" class="form-label">Location</label>
         <br />
 
@@ -66,10 +72,7 @@
           class="form-control"
         />
       </div>
-      <br />
-      <button class="btn btn-dark ms-4 add-btn">Add</button>
+      <button class="btn add-btn">Add listing</button>
     </form>
   </div>
 </div>
-<br />
-<br />
