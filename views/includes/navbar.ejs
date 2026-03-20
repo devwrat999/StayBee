@@ -15,6 +15,9 @@
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav me-auto">
         <a class="nav-link" href="/">Home</a>
+        <% if (currentUser) { %>
+          <a class="nav-link" href="/favourites"><i class="fa-regular fa-heart me-1"></i>Favourites</a>
+        <% } %>
         <% if (currentUser && currentUser.role === "admin") { %>
           <a class="nav-link" href="/listings/new">Add new Listing</a>
         <% } %>

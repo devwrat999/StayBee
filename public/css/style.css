@@ -209,3 +209,32 @@ h5 {
   height: 260px;
   object-fit: cover;
 }
+
+/* Room availability status badges */
+.status-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.35rem 0.6rem;
+}
+.status-available {
+  background-color: #198754;
+  color: #fff;
+}
+.status-booked {
+  background-color: #dc3545;
+  color: #fff;
+}
+.status-comingsoon {
+  background-color: #fd7e14;
+  color: #fff;
+}
+
+.img-lightbox,
+.img-lightbox-card {
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+.img-lightbox:hover,
+.img-lightbox-card:hover {
+  opacity: 0.9;
+}

@@ -20,6 +20,12 @@ const userSchema = new mongoose.Schema(
       default: "user",
       required: true,
     },
+    favourites: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Listing",
+      },
+    ],
   },
   { timestamps: true }
 );

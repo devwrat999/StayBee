@@ -72,6 +72,14 @@
           class="form-control"
         />
       </div>
+      <div class="mb-3">
+        <label for="status" class="form-label">Availability Status</label>
+        <select name="listing[status]" id="status" class="form-select">
+          <option value="Available">Available</option>
+          <option value="Booked">Booked</option>
+          <option value="Coming Soon">Coming Soon</option>
+        </select>
+      </div>
       <div class="d-grid mt-3">
         <button type="submit" class="btn btn-primary">
           Create listing

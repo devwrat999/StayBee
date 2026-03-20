@@ -3,6 +3,7 @@ const app = express();
 const mongoose = require("mongoose");
 const Listing = require("./models/listing.js");
 const User = require("./models/user.js");
+const Review = require("./models/review.js");
 const path = require("path");
 const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
@@ -83,6 +84,16 @@ main()
 
 async function main() {
   await mongoose.connect(mongoUrl);
+  const legacy = await Listing.find({ rating: { $exists: true }, averageRating: null });
+  for (const l of legacy) {
+    if (l.rating != null) {
+      await Listing.findByIdAndUpdate(l._id, {
+        averageRating: l.rating,
+        reviewCount: 1,
+        $unset: { rating: 1 },
+      });
+    }
+  }
 }
 
 app.get("/", (req, res) => {
@@ -153,7 +164,7 @@ app.post("/login", async (req, res) => {
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) return res.status(401).render("auth/login.ejs", { error: "Invalid username or password." });
 
-    req.session.user = { name: user.username, role: user.role };
+    req.session.user = { id: user._id.toString(), name: user.username, role: user.role };
     res.redirect("/listings");
   } catch (err) {
     console.error("Login error:", err);
@@ -169,7 +180,7 @@ app.post("/logout", (req, res) => {
 
 app.get("/listings", async (req, res) => {
   if (!req.session?.user) return res.redirect("/login");
-  const { minPrice, maxPrice, location } = req.query;
+  const { minPrice, maxPrice, location, sort } = req.query;
 
   const filter = {};
 
@@ -185,15 +196,25 @@ app.get("/listings", async (req, res) => {
     filter.location = { $regex: location, $options: "i" };
   }
 
-  const allListing = await Listing.find(filter);
+  let query = Listing.find(filter);
+  if (sort === "price_asc") query = query.sort({ price: 1 });
+  else if (sort === "price_desc") query = query.sort({ price: -1 });
+  const allListing = await query;
+
+  let userFavouriteIds = [];
+  if (req.session?.user?.id) {
+    const u = await User.findById(req.session.user.id).select("favourites");
+    userFavouriteIds = (u?.favourites || []).map((id) => id.toString());
+  }
 
   const filters = {
     minPrice: minPrice || "",
     maxPrice: maxPrice || "",
     location: location || "",
+    sort: sort || "",
   };
 
-  res.render("listings/index", { allListing, filters });
+  res.render("listings/index", { allListing, filters, userFavouriteIds });
 });
 
 // NEW Route
@@ -207,12 +228,22 @@ app.get("/listings/:id", async (req, res) => {
   if (!req.session?.user) return res.redirect("/login");
   let { id } = req.params;
   const listing = await Listing.findById(id);
-  res.render("listings/show.ejs", { listing });
+  let isFavourite = false;
+  let userReview = null;
+  if (req.session?.user?.id && listing) {
+    const u = await User.findById(req.session.user.id).select("favourites");
+    isFavourite = (u?.favourites || []).some((fid) => fid.toString() === listing._id.toString());
+    userReview = await Review.findOne({ listing: id, author: req.session.user.id });
+  }
+  const reviews = await Review.find({ listing: id }).populate("author", "username").sort({ createdAt: -1 });
+  const err = req.query.err || null;
+  res.render("listings/show.ejs", { listing, isFavourite, reviews, userReview, err });
 });
 
 app.post("/listings", requireAdmin, upload.array("images", 10), async (req, res) => {
   try {
     const listingData = req.body.listing || {};
+    if (!listingData.status) listingData.status = "Available";
 
     if (req.files && req.files.length > 0) {
       const imagePaths = req.files.map((file) => `/uploads/${file.filename}`);
@@ -243,6 +274,7 @@ app.put("/listings/:id", requireAdmin, upload.array("images", 10), async (req, r
   try {
     let { id } = req.params;
     const updatedData = req.body.listing || {};
+    if (!updatedData.status) updatedData.status = "Available";
 
     if (req.files && req.files.length > 0) {
       const imagePaths = req.files.map((file) => `/uploads/${file.filename}`);
@@ -266,19 +298,63 @@ app.delete("/listings/:id", requireAdmin, async (req, res) => {
   res.redirect("/listings");
 });
 
-// app.get("/testListing", async (req,res)=>{
-//     let samplelisting=new Listing({
-//         title:"My New Villa",
-//         description:"By the beach",
-//         price:1500,
-//         location:"Calangute , Goa",
-//         country:"India",
-//     });
+// FAVOURITES (WISHLIST)
+app.get("/favourites", requireLogin, async (req, res) => {
+  const user = await User.findById(req.session.user.id).populate("favourites");
+  const allListing = (user?.favourites || []).filter(Boolean);
+  res.render("listings/favourites.ejs", { allListing });
+});
 
-//     await samplelisting.save();
-//     console.log("sample was saved");
-//     res.send("successfull testing");
-// });
+app.post("/listings/:id/favourite", requireLogin, async (req, res) => {
+  const { id } = req.params;
+  const userId = req.session.user.id;
+  await User.findByIdAndUpdate(userId, { $addToSet: { favourites: id } });
+  const referer = req.get("Referer") || `/listings/${id}`;
+  res.redirect(referer);
+});
+
+app.delete("/listings/:id/favourite", requireLogin, async (req, res) => {
+  const { id } = req.params;
+  const userId = req.session.user.id;
+  await User.findByIdAndUpdate(userId, { $pull: { favourites: id } });
+  const referer = req.get("Referer") || `/listings/${id}`;
+  res.redirect(referer);
+});
+
+async function updateListingRating(listingId) {
+  const reviews = await Review.find({ listing: listingId });
+  const avg = reviews.length
+    ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 10) / 10
+    : null;
+  await Listing.findByIdAndUpdate(listingId, { averageRating: avg, reviewCount: reviews.length });
+}
+
+app.post("/listings/:id/reviews", requireLogin, async (req, res) => {
+  const { id } = req.params;
+  const userId = req.session.user.id;
+  if (req.session.user.role === "admin") return res.status(403).send("Admins cannot post reviews.");
+  const existing = await Review.findOne({ listing: id, author: userId });
+  if (existing) return res.redirect(`/listings/${id}?err=already_reviewed`);
+  const rating = parseInt(req.body.rating, 10);
+  if (!rating || rating < 1 || rating > 5) return res.redirect(`/listings/${id}?err=invalid_rating`);
+  await Review.create({ listing: id, author: userId, rating, comment: (req.body.comment || "").trim() });
+  await updateListingRating(id);
+  res.redirect(`/listings/${id}`);
+});
+
+app.put("/reviews/:reviewId", requireLogin, async (req, res) => {
+  const { reviewId } = req.params;
+  const review = await Review.findById(reviewId);
+  if (!review) return res.status(404).send("Review not found.");
+  if (review.author.toString() !== req.session.user.id) return res.status(403).send("You can only edit your own review.");
+  const rating = parseInt(req.body.rating, 10);
+  if (!rating || rating < 1 || rating > 5) return res.redirect(`/listings/${review.listing}?err=invalid_rating`);
+  review.rating = rating;
+  review.comment = (req.body.comment || "").trim();
+  await review.save();
+  await updateListingRating(review.listing.toString());
+  res.redirect(`/listings/${review.listing}`);
+});
 
 app.listen(5055, () => {
   console.log("server is listning on port 5055");

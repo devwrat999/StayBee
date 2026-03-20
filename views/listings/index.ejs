@@ -1,23 +1,48 @@
 <% layout("/layouts/boilerplate") %>
 
-<div class="d-flex justify-content-between align-items-center mt-3">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
   <div>
     <h3 class="mb-0">Stays nearby</h3>
     <p class="text-muted mb-0" style="font-size: 0.9rem;">
       Explore rooms and apartments tailored for your next stay.
     </p>
   </div>
+  <form method="GET" action="/listings" class="d-flex align-items-center gap-2">
+    <input type="hidden" name="minPrice" value="<%= typeof filters !== 'undefined' ? (filters.minPrice || '') : '' %>" />
+    <input type="hidden" name="maxPrice" value="<%= typeof filters !== 'undefined' ? (filters.maxPrice || '') : '' %>" />
+    <input type="hidden" name="location" value="<%= typeof filters !== 'undefined' ? (filters.location || '') : '' %>" />
+    <label for="sortSelect" class="form-label mb-0 small text-muted">Sort:</label>
+    <select name="sort" id="sortSelect" class="form-select form-select-sm" style="width: auto;" onchange="this.form.submit()">
+      <option value="">Default</option>
+      <option value="price_asc" <%= (typeof filters !== 'undefined' && filters.sort === 'price_asc') ? 'selected' : '' %>>Low to High</option>
+      <option value="price_desc" <%= (typeof filters !== 'undefined' && filters.sort === 'price_desc') ? 'selected' : '' %>>High to Low</option>
+    </select>
+  </form>
 </div>
 
 <div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
   <% if (allListing && allListing.length > 0) { %>
     <% allListing.forEach(function (listing) { %>
+      <% const isFav = (typeof userFavouriteIds !== 'undefined' && userFavouriteIds) ? userFavouriteIds.includes(listing._id.toString()) : false; %>
       <div class="col mb-4">
         <a
           href="/listings/<%= listing._id %>"
           class="listing-link text-decoration-none text-dark"
         >
-          <div class="card h-100">
+          <div class="card h-100 position-relative">
+            <span class="badge position-absolute top-0 start-0 m-2 status-badge status-<%= (listing.status || 'Available').replace(/\s+/g, '').toLowerCase() %>">
+              <%= listing.status || 'Available' %>
+            </span>
+            <% if (currentUser) { %>
+              <form action="/listings/<%= listing._id %>/favourite" method="POST" class="position-absolute top-0 end-0 m-2" style="z-index: 5;">
+                <% if (isFav) { %>
+                  <input type="hidden" name="_method" value="DELETE" />
+                <% } %>
+                <button type="submit" class="btn btn-sm btn-light rounded-circle p-2 shadow-sm" onclick="event.stopPropagation();" title="<%= isFav ? 'Remove from favourites' : 'Add to favourites' %>">
+                  <i class="fa-<%= isFav ? 'solid' : 'regular' %> fa-heart <%= isFav ? 'text-danger' : '' %>"></i>
+                </button>
+              </form>
+            <% } %>
             <div
               id="carousel-<%= listing._id %>"
               class="carousel slide"
@@ -26,30 +51,23 @@
             >
               <div class="carousel-inner">
                 <% const hasImages = listing.images && listing.images.length > 0; %>
-                <% if (hasImages) { %>
-                  <% listing.images.forEach(function (img, idx) { %>
-                    <div class="carousel-item <%= idx === 0 ? 'active' : '' %>">
-                      <img
-                        src="<%= img %>"
-                        class="d-block w-100"
-                        alt="listing_image"
-                        style="height: 15rem; object-fit: cover;"
-                      />
-                    </div>
-                  <% }) %>
-                <% } else { %>
-                  <div class="carousel-item active">
+                <% const imgList = hasImages ? listing.images : [listing.image]; %>
+                <% imgList.forEach(function (img, idx) { %>
+                  <div class="carousel-item <%= idx === 0 ? 'active' : '' %>">
                     <img
-                      src="<%= listing.image %>"
-                      class="d-block w-100"
+                      src="<%= img %>"
+                      class="d-block w-100 img-lightbox-card"
                       alt="listing_image"
                       style="height: 15rem; object-fit: cover;"
+                      data-images='<%= JSON.stringify(imgList) %>'
+                      data-index="<%= idx %>"
+                      onclick="event.preventDefault(); event.stopPropagation(); window.openImageLightbox(JSON.parse(this.getAttribute('data-images')), <%= idx %>);"
                     />
                   </div>
-                <% } %>
+                <% }) %>
               </div>
 
-              <% if (hasImages && listing.images.length > 1) { %>
+              <% if (imgList.length > 1) { %>
                 <button
                   class="carousel-control-prev"
                   type="button"
@@ -77,9 +95,17 @@
               <p class="card-text mb-1">
                 <b><%= listing.title %></b>
               </p>
+              <% if (listing.averageRating || listing.rating) { %>
+                <p class="card-text mb-1 text-warning small">
+                  <% for (var i = 1; i <= 5; i++) { %>
+                    <i class="fa-<%= i <= Math.round(listing.averageRating || listing.rating) ? 'solid' : 'regular' %> fa-star"></i>
+                  <% } %>
+                  <span class="text-muted ms-1"><%= listing.averageRating || listing.rating %></span>
+                </p>
+              <% } %>
               <p class="card-text">
                 &#8377;
-                <%= listing.price.toLocaleString("en-IN") %>
+                <%= listing.price ? listing.price.toLocaleString("en-IN") : '—' %>
                 / month
               </p>
             </div>

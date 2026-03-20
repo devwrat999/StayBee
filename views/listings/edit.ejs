@@ -88,6 +88,14 @@
       type="text"
     />
   </div>
+  <div class="mb-3">
+    <label for="status" class="form-label">Availability Status</label>
+    <select name="listing[status]" id="status" class="form-select">
+      <option value="Available" <%= listing.status === 'Available' ? 'selected' : '' %>>Available</option>
+      <option value="Booked" <%= listing.status === 'Booked' ? 'selected' : '' %>>Booked</option>
+      <option value="Coming Soon" <%= listing.status === 'Coming Soon' ? 'selected' : '' %>>Coming Soon</option>
+    </select>
+  </div>
 
   <button class="btn edit-btn">Save</button>
 </form>

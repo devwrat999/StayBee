@@ -25,6 +25,13 @@ const listingSchema = new Schema({
   price: Number,
   location: String,
   country: String,
+  status: {
+    type: String,
+    enum: ["Available", "Booked", "Coming Soon"],
+    default: "Available",
+  },
+  averageRating: { type: Number, default: null },
+  reviewCount: { type: Number, default: 0 },
 });
 
 const Listing = mongoose.model("Listing", listingSchema);

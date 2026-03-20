@@ -69,6 +69,14 @@
                   value="<%= (typeof filters !== 'undefined' && filters.location) ? filters.location : '' %>"
                 />
               </div>
+              <div class="mb-3">
+                <label for="modalSort" class="form-label">Sort by Price</label>
+                <select class="form-select" id="modalSort" name="sort">
+                  <option value="">Default</option>
+                  <option value="price_asc" <%= (typeof filters !== 'undefined' && filters.sort === 'price_asc') ? 'selected' : '' %>>Low to High</option>
+                  <option value="price_desc" <%= (typeof filters !== 'undefined' && filters.sort === 'price_desc') ? 'selected' : '' %>>High to Low</option>
+                </select>
+              </div>
             </div>
             <div class="modal-footer">
               <button
@@ -87,10 +95,72 @@
       </div>
     </div>
 
+    <!-- Image Lightbox Modal -->
+    <div class="modal fade" id="imageLightboxModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
+      <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content bg-dark border-0">
+          <div class="modal-body p-0 text-center position-relative d-flex align-items-center justify-content-center min-vh-75">
+            <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close" style="z-index: 1055;"></button>
+            <button type="button" class="btn btn-link text-white position-absolute start-0 top-50 translate-middle-y p-3 fs-1 lightbox-nav" id="lightboxPrev" aria-label="Previous" style="z-index: 1055; text-decoration: none; visibility: hidden;">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <img id="lightboxImage" src="" alt="Full size" class="img-fluid" style="max-height: 90vh; width: auto;" />
+            <button type="button" class="btn btn-link text-white position-absolute end-0 top-50 translate-middle-y p-3 fs-1 lightbox-nav" id="lightboxNext" aria-label="Next" style="z-index: 1055; text-decoration: none; visibility: hidden;">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+            <span class="position-absolute bottom-0 start-50 translate-middle-x text-white-50 small mb-2" id="lightboxCounter" style="z-index: 1055;"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <%- include("../includes/footer.ejs") %>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
     <script>
+      (function () {
+        var lightboxImages = [];
+        var lightboxIndex = 0;
+        window.openImageLightbox = function (imagesOrSrc, index) {
+          var images = Array.isArray(imagesOrSrc) ? imagesOrSrc : [imagesOrSrc];
+          var idx = typeof index === "number" ? index : 0;
+          lightboxImages = images;
+          lightboxIndex = idx;
+          var imgEl = document.getElementById("lightboxImage");
+          var modal = document.getElementById("imageLightboxModal");
+          var prevBtn = document.getElementById("lightboxPrev");
+          var nextBtn = document.getElementById("lightboxNext");
+          var counterEl = document.getElementById("lightboxCounter");
+          if (!imgEl || !modal) return;
+          function updateImg() {
+            if (lightboxImages.length) {
+              imgEl.src = lightboxImages[lightboxIndex];
+              prevBtn.style.visibility = lightboxImages.length > 1 ? "visible" : "hidden";
+              nextBtn.style.visibility = lightboxImages.length > 1 ? "visible" : "hidden";
+              counterEl.textContent = lightboxImages.length > 1 ? (lightboxIndex + 1) + " / " + lightboxImages.length : "";
+            }
+          }
+          prevBtn.onclick = function () {
+            lightboxIndex = (lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length;
+            updateImg();
+          };
+          nextBtn.onclick = function () {
+            lightboxIndex = (lightboxIndex + 1) % lightboxImages.length;
+            updateImg();
+          };
+          function keyNav(e) {
+            if (modal.classList.contains("show") && lightboxImages.length > 1) {
+              if (e.key === "ArrowLeft") { lightboxIndex = (lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length; updateImg(); }
+              else if (e.key === "ArrowRight") { lightboxIndex = (lightboxIndex + 1) % lightboxImages.length; updateImg(); }
+            }
+          }
+          document.addEventListener("keydown", keyNav);
+          modal.addEventListener("hidden.bs.modal", function () { document.removeEventListener("keydown", keyNav); }, { once: true });
+          updateImg();
+          var bsModal = bootstrap.Modal.getOrCreateInstance(modal);
+          bsModal.show();
+        };
+      })();
       document.addEventListener("DOMContentLoaded", function () {
         if (window.bootstrap && window.bootstrap.Carousel) {
           var carousels = document.querySelectorAll(".carousel");
@@ -102,6 +172,28 @@
             });
           });
         }
+        document.querySelectorAll(".img-lightbox").forEach(function (el) {
+          el.addEventListener("click", function () {
+            var imagesStr = this.getAttribute("data-lightbox-images");
+            var idx = parseInt(this.getAttribute("data-lightbox-index"), 10);
+            if (imagesStr) {
+              try {
+                var images = JSON.parse(imagesStr);
+                window.openImageLightbox(images, isNaN(idx) ? 0 : idx);
+              } catch (e) {
+                window.openImageLightbox(this.getAttribute("data-full-src") || this.src);
+              }
+            } else {
+              window.openImageLightbox(this.getAttribute("data-full-src") || this.src);
+            }
+          });
+          el.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              this.click();
+            }
+          });
+        });
       });
     </script>
 </body>
