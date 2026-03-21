@@ -10,6 +10,7 @@ const ejsMate = require("ejs-mate");
 const multer = require("multer");
 const session = require("express-session");
 const bcrypt = require("bcryptjs");
+const fs = require("fs");
 
 const mongoUrl = "mongodb://127.0.0.1:27017/wanderlust";
 
@@ -50,6 +51,17 @@ app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 app.engine("ejs", ejsMate);
 app.use(express.static(path.join(__dirname, "/public")));
+app.use("/assets", express.static(path.join(__dirname, "assets")));
+const cursorAssetsPath = path.join(
+  process.env.USERPROFILE || "",
+  ".cursor",
+  "projects",
+  "d-Major-Project-Air-BNB",
+  "assets"
+);
+if (fs.existsSync(cursorAssetsPath)) {
+  app.use("/assets", express.static(cursorAssetsPath));
+}
 
 app.use(
   session({

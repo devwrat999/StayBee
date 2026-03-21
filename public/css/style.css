@@ -24,6 +24,13 @@ body {
   font-size: 2rem;
 }
 
+.navbar-logo-img {
+  height: 2.7rem;
+  width: auto;
+  display: block;
+  object-fit: contain;
+}
+
 .navbar .navbar-nav a.nav-link {
   color: #222222 !important;
   font-size: 0.95rem;
@@ -308,6 +315,10 @@ body {
 }
 
 @media (max-width: 767.98px) {
+  .navbar-logo-img {
+    height: 2.25rem;
+  }
+
   .navbar-collapse {
     margin-top: 0.6rem;
   }
