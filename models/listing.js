@@ -25,6 +25,11 @@ const listingSchema = new Schema({
   price: Number,
   location: String,
   country: String,
+  ownerContact: {
+    type: String,
+    trim: true,
+    default: "",
+  },
   status: {
     type: String,
     enum: ["Available", "Booked", "Coming Soon"],

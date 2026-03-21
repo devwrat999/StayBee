@@ -9,27 +9,30 @@
   </div>
 </div>
 
-<div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
+<div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3" id="favouritesGrid">
   <% if (allListing && allListing.length > 0) { %>
     <% allListing.forEach(function (listing) { %>
-      <div class="col mb-4">
+      <% const statusText = listing.status || 'Available'; %>
+      <% const statusClass = statusText === 'Available' ? 'status-available' : (statusText === 'Booked' ? 'status-booked' : 'status-comingsoon'); %>
+      <div class="col mb-4" data-favourite-card="<%= listing._id %>">
         <a
           href="/listings/<%= listing._id %>"
           class="listing-link text-decoration-none text-dark"
         >
           <div class="card h-100 position-relative">
-            <span class="badge position-absolute top-0 start-0 m-2 status-badge status-<%= (listing.status || 'Available').replace(/\s+/g, '').toLowerCase() %>">
-              <%= listing.status || 'Available' %>
+            <span class="badge position-absolute top-0 start-0 m-2 status-badge <%= statusClass %>">
+              <%= statusText %>
             </span>
             <form
-              action="/listings/<%= listing._id %>/favourite"
+              action="/listings/<%= listing._id %>/favourite/toggle"
               method="POST"
-              class="position-absolute top-0 end-0 m-2"
+              class="position-absolute top-0 end-0 m-2 js-favourite-form"
               style="z-index: 5;"
+              data-listing-id="<%= listing._id %>"
+              data-is-favourite="true"
             >
-              <input type="hidden" name="_method" value="DELETE" />
-              <button type="submit" class="btn btn-sm btn-light rounded-circle p-2 shadow-sm" onclick="event.stopPropagation();" title="Remove from favourites">
-                <i class="fa-solid fa-heart text-danger"></i>
+              <button type="submit" class="btn btn-sm btn-light rounded-circle p-2 shadow-sm js-favourite-btn" onclick="event.stopPropagation();" title="Remove from favourites">
+                <i class="fa-solid fa-heart text-danger js-favourite-icon"></i>
               </button>
             </form>
             <div
@@ -67,13 +70,19 @@
               <% } %>
             </div>
             <div class="card-body">
-              <p class="card-text mb-1"><b><%= listing.title %></b></p>
+              <p class="card-text mb-1 d-flex align-items-center gap-2 flex-wrap">
+                <b><%= listing.title %></b>
+                <span class="status-dot <%= statusClass %>" aria-label="<%= statusText %>" title="<%= statusText %>"></span>
+              </p>
               <% if (listing.averageRating || listing.rating) { %>
+                <% const avgRating = listing.averageRating || listing.rating; %>
+                <% const totalReviews = listing.reviewCount || (listing.rating ? 1 : 0); %>
                 <p class="card-text mb-1 text-warning small">
+                  <span class="text-muted me-1"><%= avgRating %></span>
                   <% for (var i = 1; i <= 5; i++) { %>
-                    <i class="fa-<%= i <= Math.round(listing.averageRating || listing.rating) ? 'solid' : 'regular' %> fa-star"></i>
+                    <i class="fa-<%= i <= Math.round(avgRating) ? 'solid' : 'regular' %> fa-star"></i>
                   <% } %>
-                  <span class="text-muted ms-1"><%= listing.averageRating || listing.rating %></span>
+                  <span class="text-muted ms-1">(<%= totalReviews %> <%= totalReviews === 1 ? 'review' : 'reviews' %>)</span>
                 </p>
               <% } %>
               <p class="card-text">
@@ -85,7 +94,7 @@
       </div>
     <% }); %>
   <% } else { %>
-    <div class="col-12">
+    <div class="col-12" id="favouritesEmptyState">
       <div class="text-center py-5 text-muted">
         <i class="fa-regular fa-heart fa-3x mb-3 d-block"></i>
         <p class="mb-0">No favourites yet.</p>
@@ -95,3 +104,62 @@
     </div>
   <% } %>
 </div>
+
+<% if (allListing && allListing.length > 0) { %>
+  <div class="col-12 d-none" id="favouritesEmptyState">
+    <div class="text-center py-5 text-muted">
+      <i class="fa-regular fa-heart fa-3x mb-3 d-block"></i>
+      <p class="mb-0">No favourites yet.</p>
+      <p class="small">Browse listings and click "Add to favourites" to save rooms you like.</p>
+      <a href="/listings" class="btn btn-primary mt-3">Explore Listings</a>
+    </div>
+  </div>
+<% } %>
+
+<script>
+  (function () {
+    var grid = document.getElementById("favouritesGrid");
+    var emptyState = document.getElementById("favouritesEmptyState");
+    if (!grid) return;
+
+    function syncEmptyState() {
+      var cards = grid.querySelectorAll("[data-favourite-card]");
+      if (!emptyState) return;
+      if (cards.length === 0) {
+        emptyState.classList.remove("d-none");
+        grid.appendChild(emptyState);
+      } else {
+        emptyState.classList.add("d-none");
+      }
+    }
+
+    document.querySelectorAll(".js-favourite-form").forEach(function (form) {
+      form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var btn = form.querySelector(".js-favourite-btn");
+        if (btn) btn.disabled = true;
+        try {
+          var response = await fetch(form.action, {
+            method: "POST",
+            headers: {
+              "X-Requested-With": "XMLHttpRequest",
+              Accept: "application/json",
+            },
+          });
+          if (!response.ok) throw new Error("Failed to toggle favourite");
+          var data = await response.json();
+          if (!data.isFavourite) {
+            var listingId = form.getAttribute("data-listing-id");
+            var card = grid.querySelector('[data-favourite-card="' + listingId + '"]');
+            if (card) card.remove();
+            syncEmptyState();
+          }
+        } catch (err) {
+          form.submit();
+        } finally {
+          if (btn) btn.disabled = false;
+        }
+      });
+    });
+  })();
+</script>

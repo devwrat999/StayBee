@@ -1,11 +1,22 @@
 <nav class="navbar navbar-expand-md sticky-top">
   <div class="container-fluid px-3 px-md-4">
-    <a class="navbar-brand d-flex align-items-center" href="/">
+    <a class="navbar-brand d-flex align-items-center me-2" href="/">
       <i class="fa-regular fa-compass me-2"></i>
       <span class="fw-semibold">StayBee</span>
     </a>
+    <% if (!hideSearch) { %>
+      <button
+        type="button"
+        class="search-trigger d-none d-md-inline-flex"
+        data-bs-toggle="modal"
+        data-bs-target="#searchModal"
+      >
+        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+        <span>Search</span>
+      </button>
+    <% } %>
     <button
-      class="navbar-toggler"
+      class="navbar-toggler ms-auto"
       type="button"
       data-bs-toggle="collapse"
       data-bs-target="#navbarNavAltMarkup"
@@ -13,7 +24,7 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-      <div class="navbar-nav me-auto">
+      <div class="navbar-nav ms-md-2 me-auto align-items-md-center gap-md-1">
         <a class="nav-link" href="/">Home</a>
         <% if (currentUser) { %>
           <a class="nav-link" href="/favourites"><i class="fa-regular fa-heart me-1"></i>Favourites</a>
@@ -22,26 +33,48 @@
           <a class="nav-link" href="/listings/new">Add new Listing</a>
         <% } %>
       </div>
-      <div class="d-flex align-items-center gap-2">
-        <% if (currentUser) { %>
-          <span class="small text-muted d-none d-md-inline">
-            <%= currentUser.name %> (<%= currentUser.role %>)
-          </span>
-          <form method="POST" action="/logout" class="d-inline">
-            <button type="submit" class="btn btn-outline-secondary">Logout</button>
-          </form>
-        <% } %>
+      <div class="d-flex align-items-center gap-2 ms-auto">
         <% if (!hideSearch) { %>
           <button
             type="button"
-            class="btn btn-outline-primary"
+            class="search-trigger d-inline-flex d-md-none"
             data-bs-toggle="modal"
             data-bs-target="#searchModal"
           >
-            Search
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <span>Search</span>
+          </button>
+        <% } %>
+        <% if (currentUser) { %>
+          <button
+            type="button"
+            class="btn user-menu-toggle"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#userMenuCanvas"
+            aria-controls="userMenuCanvas"
+            aria-label="Open user menu"
+          >
+            <i class="fa-solid fa-bars"></i>
           </button>
         <% } %>
       </div>
     </div>
   </div>
 </nav>
+
+<% if (currentUser) { %>
+  <div class="offcanvas offcanvas-end user-menu-canvas" tabindex="-1" id="userMenuCanvas" aria-labelledby="userMenuCanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="userMenuCanvasLabel">Account</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      <p class="menu-user-label mb-3">
+        <%= currentUser.name %><%= currentUser.role === "admin" ? " (Admin)" : "" %>
+      </p>
+      <form method="POST" action="/logout" class="menu-logout-form">
+        <button type="submit" class="btn btn-outline-secondary menu-logout-btn">Logout</button>
+      </form>
+    </div>
+  </div>
+<% } %>

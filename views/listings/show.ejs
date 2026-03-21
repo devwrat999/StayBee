@@ -9,20 +9,22 @@
           <%= listing.status || 'Available' %>
         </span>
         <% if (currentUser) { %>
-          <% if (isFavourite) { %>
-            <form action="/listings/<%= listing._id %>/favourite" method="POST" class="d-inline">
-              <input type="hidden" name="_method" value="DELETE" />
-              <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove from favourites">
-                <i class="fa-solid fa-heart me-1"></i>Remove from favourites
-              </button>
-            </form>
-          <% } else { %>
-            <form action="/listings/<%= listing._id %>/favourite" method="POST" class="d-inline">
-              <button type="submit" class="btn btn-sm btn-outline-primary" title="Add to favourites">
-                <i class="fa-regular fa-heart me-1"></i>Add to favourites
-              </button>
-            </form>
-          <% } %>
+          <form
+            action="/listings/<%= listing._id %>/favourite/toggle"
+            method="POST"
+            class="d-inline js-favourite-form"
+            data-listing-id="<%= listing._id %>"
+            data-is-favourite="<%= isFavourite ? 'true' : 'false' %>"
+          >
+            <button
+              type="submit"
+              class="btn btn-sm <%= isFavourite ? 'btn-outline-danger' : 'btn-outline-primary' %> js-favourite-btn"
+              title="<%= isFavourite ? 'Remove from favourites' : 'Add to favourites' %>"
+            >
+              <i class="fa-<%= isFavourite ? 'solid' : 'regular' %> fa-heart me-1 js-favourite-icon"></i>
+              <span class="js-favourite-label"><%= isFavourite ? 'Remove from favourites' : 'Add to favourites' %></span>
+            </button>
+          </form>
         <% } %>
       </div>
       <div class="row row-cols-1 row-cols-md-2 g-3">
@@ -65,6 +67,31 @@
             <strong>Country:</strong>
             <span><%= listing.country %></span>
           </p>
+          <% if (listing.ownerContact && listing.ownerContact.trim()) { %>
+            <% const contactRaw = listing.ownerContact.trim(); %>
+            <% const whatsappNumber = contactRaw.replace(/[^\d]/g, ""); %>
+            <div class="mb-3">
+              <p class="mb-2">
+                <strong>Owner Contact:</strong>
+                <a href="tel:<%= contactRaw %>" class="text-decoration-none"><%= contactRaw %></a>
+              </p>
+              <div class="d-flex flex-wrap gap-2">
+                <a href="tel:<%= contactRaw %>" class="btn btn-sm btn-outline-primary">
+                  <i class="fa-solid fa-phone me-1"></i>Call owner
+                </a>
+                <% if (whatsappNumber) { %>
+                  <a
+                    href="https://wa.me/<%= whatsappNumber %>"
+                    class="btn btn-sm btn-outline-success"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <i class="fa-brands fa-whatsapp me-1"></i>WhatsApp
+                  </a>
+                <% } %>
+              </div>
+            </div>
+          <% } %>
           <hr />
           <h5 class="mb-2">Description</h5>
           <p class="text-muted"><%= listing.description %></p>
@@ -184,3 +211,50 @@
   </div>
 </div>
 <% } %>
+
+<script>
+  (function () {
+    function updateFavouriteUI(form, isFavourite) {
+      form.setAttribute("data-is-favourite", isFavourite ? "true" : "false");
+      var btn = form.querySelector(".js-favourite-btn");
+      var icon = form.querySelector(".js-favourite-icon");
+      var label = form.querySelector(".js-favourite-label");
+      if (btn) {
+        btn.classList.toggle("btn-outline-danger", isFavourite);
+        btn.classList.toggle("btn-outline-primary", !isFavourite);
+        btn.setAttribute("title", isFavourite ? "Remove from favourites" : "Add to favourites");
+      }
+      if (icon) {
+        icon.classList.toggle("fa-solid", isFavourite);
+        icon.classList.toggle("fa-regular", !isFavourite);
+      }
+      if (label) {
+        label.textContent = isFavourite ? "Remove from favourites" : "Add to favourites";
+      }
+    }
+
+    var form = document.querySelector(".js-favourite-form");
+    if (!form) return;
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      var btn = form.querySelector(".js-favourite-btn");
+      if (btn) btn.disabled = true;
+      try {
+        var response = await fetch(form.action, {
+          method: "POST",
+          headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            Accept: "application/json",
+          },
+        });
+        if (!response.ok) throw new Error("Failed to toggle favourite");
+        var data = await response.json();
+        updateFavouriteUI(form, !!data.isFavourite);
+      } catch (err) {
+        form.submit();
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    });
+  })();
+</script>

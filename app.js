@@ -54,6 +54,12 @@ app.use(
     secret: process.env.SESSION_SECRET || "staybee-session-secret",
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
+    },
   })
 );
 
@@ -275,11 +281,32 @@ app.put("/listings/:id", requireAdmin, upload.array("images", 10), async (req, r
     let { id } = req.params;
     const updatedData = req.body.listing || {};
     if (!updatedData.status) updatedData.status = "Available";
+    const listing = await Listing.findById(id);
+    if (!listing) return res.status(404).send("Listing not found.");
+
+    const deleteImagesRaw = req.body.deleteImages;
+    const deleteImages = Array.isArray(deleteImagesRaw)
+      ? deleteImagesRaw
+      : deleteImagesRaw
+      ? [deleteImagesRaw]
+      : [];
+
+    const existingImages = Array.isArray(listing.images) ? listing.images : [];
+    const remainingImages = existingImages.filter((imgPath) => !deleteImages.includes(imgPath));
+    let finalImages = remainingImages;
 
     if (req.files && req.files.length > 0) {
       const imagePaths = req.files.map((file) => `/uploads/${file.filename}`);
-      updatedData.images = imagePaths;
-      updatedData.image = imagePaths[0];
+      // Keep existing images and append newly uploaded ones.
+      finalImages = [...remainingImages, ...imagePaths];
+    }
+
+    updatedData.images = finalImages;
+    if (finalImages.length > 0) {
+      updatedData.image = finalImages[0];
+    } else {
+      updatedData.image =
+        "https://images.unsplash.com/photo-1519046904884-53103b34b206?q=80&w=1170&auto=format&fit=crop";
     }
 
     await Listing.findByIdAndUpdate(id, updatedData);
@@ -319,6 +346,37 @@ app.delete("/listings/:id/favourite", requireLogin, async (req, res) => {
   await User.findByIdAndUpdate(userId, { $pull: { favourites: id } });
   const referer = req.get("Referer") || `/listings/${id}`;
   res.redirect(referer);
+});
+
+app.post("/listings/:id/favourite/toggle", requireLogin, async (req, res) => {
+  const { id } = req.params;
+  const userId = req.session.user.id;
+  const user = await User.findById(userId).select("favourites");
+
+  let isFavourite = false;
+  if (user) {
+    const alreadyFavourite = (user.favourites || []).some((favId) => favId.toString() === id);
+    if (alreadyFavourite) {
+      user.favourites = (user.favourites || []).filter((favId) => favId.toString() !== id);
+      isFavourite = false;
+    } else {
+      user.favourites.push(id);
+      isFavourite = true;
+    }
+    await user.save();
+  }
+
+  const wantsJson =
+    req.xhr ||
+    (req.get("Accept") || "").includes("application/json") ||
+    req.get("X-Requested-With") === "XMLHttpRequest";
+
+  if (wantsJson) {
+    return res.json({ success: true, isFavourite });
+  }
+
+  const referer = req.get("Referer") || `/listings/${id}`;
+  return res.redirect(referer);
 });
 
 async function updateListingRating(listingId) {

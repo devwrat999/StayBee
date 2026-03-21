@@ -27,10 +27,69 @@ body {
 .nav-link {
   color: #222222 !important;
   font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: 600;
+  border-radius: 0.45rem;
+  padding: 0.4rem 0.7rem !important;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 .nav-link:hover {
-  color: #4f7c82 !important;
+  color: #0b2e33 !important;
+  background-color: #e7f4f6;
+}
+
+.menu-user-label {
+  color: #5f6f78 !important;
+  font-weight: 600;
+  cursor: default;
+}
+
+.menu-user-label:hover {
+  background-color: transparent;
+  color: #5f6f78 !important;
+}
+
+.menu-logout-form {
+  margin: 0.1rem 0 0.1rem 0.2rem;
+}
+
+.menu-logout-btn {
+  border-radius: 0.5rem !important;
+}
+
+.user-menu-toggle {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid #d6e6eb;
+  border-radius: 0.5rem !important;
+  background-color: #f5fafc;
+  color: #4f7c82;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.user-menu-toggle:hover,
+.user-menu-toggle:focus-visible {
+  background-color: #ffffff;
+  border-color: #b8e3e9;
+  box-shadow: 0 0 0 0.18rem rgba(184, 227, 233, 0.7);
+  color: #0b2e33;
+}
+
+.user-menu-canvas {
+  width: min(86vw, 320px) !important;
+  background-color: #ffffff;
+}
+
+.user-menu-canvas .offcanvas-title {
+  font-weight: 600;
+}
+
+.user-menu-canvas .offcanvas-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 .fa-brands.fa-linkedin {
   color: rgba(69, 69, 248, 0.956);
@@ -162,6 +221,20 @@ body {
   border-color: #4f7c82;
 }
 
+.dlt_btn {
+  background-color: #dc3545 !important;
+  border-color: #dc3545 !important;
+  color: #ffffff !important;
+}
+
+.dlt_btn:hover,
+.dlt_btn:focus-visible {
+  background-color: #c82333 !important;
+  border-color: #c82333 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 0.15rem rgba(220, 53, 69, 0.2);
+}
+
 .btn-outline-primary {
   border-radius: 999px !important;
   border-color: #93b1b5;
@@ -173,6 +246,64 @@ body {
 .btn-outline-primary:hover {
   background-color: #b8e3e9;
   border-color: #4f7c82;
+}
+
+.search-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.55rem;
+  min-width: 190px;
+  height: 2.5rem;
+  padding: 0 0.9rem;
+  border: 1px solid #d6e6eb;
+  border-radius: 0.5rem;
+  background-color: #f5fafc;
+  color: #4f7c82;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-trigger i {
+  color: #5f8f98;
+  font-size: 0.92rem;
+}
+
+.search-trigger:hover,
+.search-trigger:focus-visible {
+  background-color: #ffffff;
+  border-color: #b8e3e9;
+  box-shadow: 0 0 0 0.18rem rgba(184, 227, 233, 0.7);
+  outline: none;
+}
+
+@media (max-width: 767.98px) {
+  .navbar-collapse {
+    margin-top: 0.6rem;
+  }
+
+  .navbar-nav {
+    align-items: stretch !important;
+  }
+
+  .nav-link {
+    display: block;
+  }
+
+  .menu-logout-form {
+    margin: 0.2rem 0 0.2rem 0;
+  }
+
+  .menu-logout-btn {
+    width: 100%;
+  }
+
+  .search-trigger {
+    min-width: 0;
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 .form-control {
@@ -212,9 +343,13 @@ h5 {
 
 /* Room availability status badges */
 .status-badge {
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 0.35rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.34rem 0.62rem;
+  border-radius: 999px;
+  letter-spacing: 0.01em;
+  z-index: 4;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
 }
 .status-available {
   background-color: #198754;
@@ -229,6 +364,21 @@ h5 {
   color: #fff;
 }
 
+.status-inline-badge {
+  font-size: 0.68rem;
+  padding: 0.24rem 0.5rem;
+  box-shadow: none;
+}
+
+.status-dot {
+  width: 0.58rem;
+  height: 0.58rem;
+  border-radius: 50%;
+  display: inline-block;
+  flex: 0 0 auto;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.85);
+}
+
 .img-lightbox,
 .img-lightbox-card {
   cursor: pointer;
@@ -237,4 +387,38 @@ h5 {
 .img-lightbox:hover,
 .img-lightbox-card:hover {
   opacity: 0.9;
+}
+
+.edit-image-item {
+  position: relative;
+  border-radius: 0.65rem;
+  overflow: hidden;
+}
+
+.edit-image-delete-btn {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  width: 1.9rem;
+  height: 1.9rem;
+  border: none;
+  border-radius: 999px;
+  background: rgba(18, 28, 41, 0.78);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.18s ease, transform 0.18s ease, background-color 0.18s ease;
+}
+
+.edit-image-item:hover .edit-image-delete-btn,
+.edit-image-delete-btn:focus-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.edit-image-delete-btn:hover {
+  background: rgba(220, 53, 69, 0.92);
 }

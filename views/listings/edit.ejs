@@ -20,32 +20,43 @@
   </div>
   <div class="mb-3">
     <label for="description" class="form-label">Description</label>
-    <textarea name="listing[description]" class="form-control">
-<%= listing.description %></textarea
-    >
+    <textarea name="listing[description]" class="form-control"><%= listing.description %></textarea>
   </div>
 
   <div class="mb-3">
     <label class="form-label">Current Images</label>
-    <div class="d-flex flex-wrap gap-2">
+    <div class="d-flex flex-wrap gap-2" id="currentImagesGrid">
       <% if (listing.images && listing.images.length > 0) { %>
         <% listing.images.forEach(function (img) { %>
-          <img
-            src="<%= img %>"
-            alt="Listing image"
-            class="img-fluid mb-2"
-            style="max-height: 120px; object-fit: cover;"
-          />
+          <div class="edit-image-item mb-2" data-image-path="<%= img %>">
+            <img
+              src="<%= img %>"
+              alt="Listing image"
+              class="img-fluid"
+              style="max-height: 120px; object-fit: cover;"
+            />
+            <button type="button" class="edit-image-delete-btn" title="Delete image" aria-label="Delete image">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
         <% }) %>
       <% } else { %>
-        <img
-          src="<%= listing.image %>"
-          alt="Listing image"
-          class="img-fluid mb-2"
-          style="max-height: 120px; object-fit: cover;"
-        />
+        <% if (listing.image) { %>
+          <div class="edit-image-item mb-2" data-image-path="<%= listing.image %>">
+            <img
+              src="<%= listing.image %>"
+              alt="Listing image"
+              class="img-fluid"
+              style="max-height: 120px; object-fit: cover;"
+            />
+            <button type="button" class="edit-image-delete-btn" title="Delete image" aria-label="Delete image">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        <% } %>
       <% } %>
     </div>
+    <div id="noImagesText" class="text-muted small mt-2 d-none">No images left. Upload new images before saving.</div>
   </div>
   <div class="mb-3">
     <label for="images" class="form-label">Upload New Images (optional)</label>
@@ -58,7 +69,7 @@
       multiple
     />
     <div class="form-text">
-      Choose one or more images to replace the current ones. Leave empty to keep existing images.
+      New images are added to existing ones. Use the delete icon on existing images to remove selected images.
     </div>
   </div>
   <div class="mb-3">
@@ -97,7 +108,47 @@
     </select>
   </div>
 
-  <button class="btn edit-btn">Save</button>
+  <div class="d-grid mt-3">
+    <button type="submit" class="btn btn-primary btn-lg fw-semibold">Save Changes</button>
+  </div>
 </form>
   </div>
 </div>
+
+<script>
+  (function () {
+    var form = document.querySelector('form[action*="/listings/"][action*="_method=PUT"]');
+    var grid = document.getElementById("currentImagesGrid");
+    var noImagesText = document.getElementById("noImagesText");
+    if (!form || !grid) return;
+
+    function syncNoImagesState() {
+      var visibleItems = grid.querySelectorAll(".edit-image-item");
+      if (noImagesText) {
+        noImagesText.classList.toggle("d-none", visibleItems.length > 0);
+      }
+    }
+
+    grid.addEventListener("click", function (e) {
+      var deleteBtn = e.target.closest(".edit-image-delete-btn");
+      if (!deleteBtn) return;
+      e.preventDefault();
+
+      var imageItem = deleteBtn.closest(".edit-image-item");
+      if (!imageItem) return;
+      var imagePath = imageItem.getAttribute("data-image-path");
+      if (!imagePath) return;
+
+      var hiddenInput = document.createElement("input");
+      hiddenInput.type = "hidden";
+      hiddenInput.name = "deleteImages";
+      hiddenInput.value = imagePath;
+      form.appendChild(hiddenInput);
+
+      imageItem.remove();
+      syncNoImagesState();
+    });
+
+    syncNoImagesState();
+  })();
+</script>
