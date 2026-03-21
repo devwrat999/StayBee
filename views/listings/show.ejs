@@ -67,19 +67,26 @@
             <strong>Country:</strong>
             <span><%= listing.country %></span>
           </p>
-          <% if (listing.ownerContact && listing.ownerContact.trim()) { %>
-            <% const contactRaw = listing.ownerContact.trim(); %>
-            <% const whatsappNumber = contactRaw.replace(/[^\d]/g, ""); %>
+          <% const hasOwnerContact = listing.ownerContact && listing.ownerContact.trim(); %>
+          <% const hasWhatsappNumber = listing.whatsappNumber && listing.whatsappNumber.trim(); %>
+          <% if (hasOwnerContact || hasWhatsappNumber) { %>
+            <% const contactRaw = hasOwnerContact ? listing.ownerContact.trim() : ""; %>
+            <% const whatsappRaw = hasWhatsappNumber ? listing.whatsappNumber.trim() : ""; %>
+            <% const whatsappNumber = whatsappRaw.replace(/[^\d]/g, ""); %>
             <div class="mb-3">
-              <p class="mb-2">
-                <strong>Owner Contact:</strong>
-                <a href="tel:<%= contactRaw %>" class="text-decoration-none"><%= contactRaw %></a>
-              </p>
+              <% if (hasOwnerContact) { %>
+                <p class="mb-2">
+                  <strong>Owner Contact:</strong>
+                  <a href="tel:<%= contactRaw %>" class="text-decoration-none"><%= contactRaw %></a>
+                </p>
+              <% } %>
               <div class="d-flex flex-wrap gap-2">
-                <a href="tel:<%= contactRaw %>" class="btn btn-sm btn-outline-primary">
-                  <i class="fa-solid fa-phone me-1"></i>Call owner
-                </a>
-                <% if (whatsappNumber) { %>
+                <% if (hasOwnerContact) { %>
+                  <a href="tel:<%= contactRaw %>" class="btn btn-sm btn-outline-primary">
+                    <i class="fa-solid fa-phone me-1"></i>Call owner
+                  </a>
+                <% } %>
+                <% if (hasWhatsappNumber && whatsappNumber) { %>
                   <a
                     href="https://wa.me/<%= whatsappNumber %>"
                     class="btn btn-sm btn-outline-success"

@@ -12,7 +12,13 @@
     <input type="hidden" name="maxPrice" value="<%= typeof filters !== 'undefined' ? (filters.maxPrice || '') : '' %>" />
     <input type="hidden" name="location" value="<%= typeof filters !== 'undefined' ? (filters.location || '') : '' %>" />
     <label for="sortSelect" class="form-label mb-0 small text-muted">Sort:</label>
-    <select name="sort" id="sortSelect" class="form-select form-select-sm" style="width: auto;" onchange="this.form.submit()">
+    <select
+      name="sort"
+      id="sortSelect"
+      class="form-select form-select-sm sort-select-btn"
+      style="width: auto;"
+      onchange="this.form.submit()"
+    >
       <option value="">Default</option>
       <option value="price_asc" <%= (typeof filters !== 'undefined' && filters.sort === 'price_asc') ? 'selected' : '' %>>Low to High</option>
       <option value="price_desc" <%= (typeof filters !== 'undefined' && filters.sort === 'price_desc') ? 'selected' : '' %>>High to Low</option>

@@ -100,6 +100,28 @@
     />
   </div>
   <div class="mb-3">
+    <label for="ownerContact" class="form-label">Owner Contact Number</label>
+    <input
+      id="ownerContact"
+      name="listing[ownerContact]"
+      class="form-control"
+      value="<%= listing.ownerContact || '' %>"
+      placeholder="Add contact number"
+      type="tel"
+    />
+  </div>
+  <div class="mb-3">
+    <label for="whatsappNumber" class="form-label">WhatsApp Number</label>
+    <input
+      id="whatsappNumber"
+      name="listing[whatsappNumber]"
+      class="form-control"
+      value="<%= listing.whatsappNumber || '' %>"
+      placeholder="Add WhatsApp number"
+      type="tel"
+    />
+  </div>
+  <div class="mb-3">
     <label for="status" class="form-label">Availability Status</label>
     <select name="listing[status]" id="status" class="form-select">
       <option value="Available" <%= listing.status === 'Available' ? 'selected' : '' %>>Available</option>

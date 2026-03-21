@@ -20,6 +20,27 @@
     align-items: center;
     justify-content: center;
     padding: 1.25rem 0;
+    opacity: 0;
+    transform: translateX(0);
+    transition: transform 0.28s ease, opacity 0.22s ease;
+  }
+
+  .login-lamp-page.page-enter-active {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .login-lamp-page.page-enter-from-right {
+    transform: translateX(40px);
+  }
+
+  .login-lamp-page.page-enter-from-left {
+    transform: translateX(-40px);
+  }
+
+  .login-lamp-page.page-exit-left {
+    opacity: 0;
+    transform: translateX(-42px);
   }
 
   .lamp-scene {
@@ -250,7 +271,7 @@
   }
 </style>
 
-<section class="login-lamp-page">
+<section class="login-lamp-page" id="authPageContainer">
   <div class="lamp-scene" id="lampScene" data-on="false">
     <p class="lamp-instruction">Pull the cord to show/hide the login</p>
     <div class="lamp-wrap" aria-hidden="true">
@@ -265,7 +286,7 @@
     </div>
 
     <div class="login-form-panel" id="loginFormPanel">
-      <h3 class="mb-3">Welcome</h3>
+      <h3 class="mb-3">Welcome to StayBee</h3>
 
       <% if (error) { %>
         <div class="alert alert-danger py-2 mb-3"><%= error %></div>
@@ -302,7 +323,7 @@
       </form>
 
       <div class="text-center mt-3">
-        <a href="/register" class="text-decoration-none text-light-emphasis">New user? Create account</a>
+        <a href="/register" id="newUserLink" class="text-decoration-none text-light-emphasis">New user? Create account</a>
       </div>
     </div>
   </div>
@@ -314,6 +335,10 @@
     var cord = document.getElementById("pullCord");
     var knob = document.getElementById("cordKnob");
     if (!scene || !cord || !knob) return;
+    var LAMP_SESSION_KEY = "staybeeLampSessionOn";
+    var TRANSITION_KEY = "staybeeAuthPageTransition";
+    var pageContainer = document.getElementById("authPageContainer");
+    var newUserLink = document.getElementById("newUserLink");
 
     var dragging = false;
     var startY = 0;
@@ -329,11 +354,62 @@
     function setActive(on) {
       scene.setAttribute("data-on", on ? "true" : "false");
       scene.classList.toggle("active", on);
+      try {
+        sessionStorage.setItem(LAMP_SESSION_KEY, on ? "true" : "false");
+      } catch (err) {}
     }
 
     function toggleScene() {
       var isOn = scene.getAttribute("data-on") === "true";
       setActive(!isOn);
+    }
+
+    try {
+      var navEntry =
+        window.performance &&
+        typeof window.performance.getEntriesByType === "function" &&
+        window.performance.getEntriesByType("navigation")[0];
+      var isReload =
+        (navEntry && navEntry.type === "reload") ||
+        (window.performance && window.performance.navigation && window.performance.navigation.type === 1);
+      if (isReload) {
+        sessionStorage.removeItem(LAMP_SESSION_KEY);
+      }
+      var savedLampState = sessionStorage.getItem(LAMP_SESSION_KEY) === "true";
+      setActive(savedLampState);
+    } catch (err) {
+      setActive(false);
+    }
+
+    if (pageContainer) {
+      var transitionDir = null;
+      try {
+        transitionDir = sessionStorage.getItem(TRANSITION_KEY);
+        sessionStorage.removeItem(TRANSITION_KEY);
+      } catch (err) {}
+
+      if (transitionDir === "back") {
+        pageContainer.classList.add("page-enter-from-left");
+      } else if (transitionDir === "forward") {
+        pageContainer.classList.add("page-enter-from-right");
+      }
+
+      requestAnimationFrame(function () {
+        pageContainer.classList.add("page-enter-active");
+      });
+    }
+
+    if (newUserLink && pageContainer) {
+      newUserLink.addEventListener("click", function (e) {
+        e.preventDefault();
+        try {
+          sessionStorage.setItem(TRANSITION_KEY, "forward");
+        } catch (err) {}
+        pageContainer.classList.add("page-exit-left");
+        setTimeout(function () {
+          window.location.href = newUserLink.href;
+        }, 220);
+      });
     }
 
     function startPull(clientY) {

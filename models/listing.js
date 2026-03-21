@@ -30,6 +30,11 @@ const listingSchema = new Schema({
     trim: true,
     default: "",
   },
+  whatsappNumber: {
+    type: String,
+    trim: true,
+    default: "",
+  },
   status: {
     type: String,
     enum: ["Available", "Booked", "Coming Soon"],
