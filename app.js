@@ -10,7 +10,6 @@ const ejsMate = require("ejs-mate");
 const multer = require("multer");
 const session = require("express-session");
 const bcrypt = require("bcryptjs");
-
 const mongoUrl = "mongodb://127.0.0.1:27017/wanderlust";
 
 // Multer configuration for image uploads
@@ -501,7 +500,7 @@ app.put("/reviews/:reviewId", requireLogin, async (req, res) => {
   res.redirect(`/listings/${review.listing}`);
 });
 
-app.listen(8080, () => {
+app.listen(5055, () => {
   console.log("Server is running at:");
-  console.log("http://localhost:8080");
+  console.log("http://localhost:5055");
 });
