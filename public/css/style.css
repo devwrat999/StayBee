@@ -9,9 +9,46 @@ body {
 }
 
 .navbar {
-  height: 4rem;
   background-color: #ffffff;
   border-bottom: 1px solid #f0f0f0;
+}
+
+.navbar.staybee-navbar {
+  min-height: 4rem;
+  height: auto;
+  padding-top: 0.45rem;
+  padding-bottom: 0.45rem;
+}
+
+.staybee-navbar-inner {
+  row-gap: 0.35rem;
+}
+
+.staybee-navbar-links {
+  flex: 1 1 0;
+  min-width: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.staybee-navbar-links::-webkit-scrollbar {
+  height: 0;
+}
+
+.staybee-navbar-nav {
+  flex-wrap: nowrap !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+}
+
+.staybee-navbar-nav .staybee-nav-link {
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .staybee-navbar-nav {
+    overflow-x: visible;
+  }
 }
 .fa-brands.fa-instagram {
   color: rgb(249, 33, 69);
@@ -71,9 +108,11 @@ body {
   border-radius: 0.5rem !important;
 }
 
-.user-menu-toggle {
-  width: 2.5rem;
-  height: 2.5rem;
+.staybee-hamburger-btn {
+  cursor: pointer;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0;
   border: 1px solid #d6e6eb;
   border-radius: 0.5rem !important;
   background-color: #f5fafc;
@@ -81,11 +120,17 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
-.user-menu-toggle:hover,
-.user-menu-toggle:focus-visible {
+.staybee-hamburger-btn i {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.staybee-hamburger-btn:hover,
+.staybee-hamburger-btn:focus-visible {
   background-color: #ffffff;
   border-color: #b8e3e9;
   box-shadow: 0 0 0 0.18rem rgba(184, 227, 233, 0.7);
@@ -172,10 +217,68 @@ body {
 
 .listing-link {
   text-decoration: none;
+  display: block;
+  width: 100%;
+  min-width: 0;
 }
 
 .card-body {
   padding: 0.75rem 0.25rem 0.25rem 0.25rem !important;
+}
+
+/* Listing grid cards (index, favourites): taller image area + balanced text block */
+.listing-card {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+  width: 100%;
+  min-width: 0;
+}
+
+.listing-card .carousel {
+  flex-shrink: 0;
+}
+
+.listing-card-img {
+  width: 100%;
+  max-width: 100%;
+  display: block;
+  object-fit: cover;
+  height: 16rem;
+}
+
+.listing-card .card-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 1rem 0.9rem 1.1rem !important;
+}
+
+.listing-card .card-body .card-text {
+  margin-bottom: 0 !important;
+}
+
+.listing-card .card-body > .card-text:last-child {
+  margin-top: auto;
+}
+
+@media (min-width: 576px) {
+  .listing-card-img {
+    height: 16.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .listing-card-img {
+    height: 17.5rem;
+  }
+}
+
+@media (min-width: 992px) {
+  .listing-card-img {
+    height: 19.5rem;
+  }
 }
 
 .card-text {
@@ -268,7 +371,7 @@ body {
   align-items: center;
   justify-content: flex-start;
   gap: 0.55rem;
-  min-width: 190px;
+  min-width: 0;
   height: 2.5rem;
   padding: 0 0.9rem;
   border: 1px solid #d6e6eb;
@@ -278,6 +381,12 @@ body {
   font-size: 0.9rem;
   font-weight: 500;
   transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+@media (min-width: 768px) {
+  .staybee-search-desktop.search-trigger {
+    min-width: 190px;
+  }
 }
 
 .search-trigger i {
@@ -319,16 +428,23 @@ body {
     height: 2.25rem;
   }
 
-  .navbar-collapse {
-    margin-top: 0.6rem;
+  .staybee-navbar-nav .staybee-nav-link {
+    padding: 0.45rem 0.72rem !important;
   }
 
-  .navbar-nav {
-    align-items: stretch !important;
+  .staybee-navbar-actions .search-trigger {
+    flex: 0 1 auto;
+    max-width: 8.5rem;
+    min-width: 2.75rem;
+    padding-left: 0.65rem;
+    padding-right: 0.65rem;
+    justify-content: center;
   }
 
-  .nav-link {
-    display: block;
+  .staybee-navbar-actions .search-trigger span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .menu-logout-form {
@@ -337,12 +453,6 @@ body {
 
   .menu-logout-btn {
     width: 100%;
-  }
-
-  .search-trigger {
-    min-width: 0;
-    width: 100%;
-    justify-content: center;
   }
 }
 

@@ -9,17 +9,17 @@
   </div>
 </div>
 
-<div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3" id="favouritesGrid">
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 g-md-4 mt-3" id="favouritesGrid">
   <% if (allListing && allListing.length > 0) { %>
     <% allListing.forEach(function (listing) { %>
       <% const statusText = listing.status || 'Available'; %>
       <% const statusClass = statusText === 'Available' ? 'status-available' : (statusText === 'Booked' ? 'status-booked' : 'status-comingsoon'); %>
-      <div class="col mb-4" data-favourite-card="<%= listing._id %>">
+      <div class="col" data-favourite-card="<%= listing._id %>">
         <a
           href="/listings/<%= listing._id %>"
           class="listing-link text-decoration-none text-dark"
         >
-          <div class="card h-100 position-relative">
+          <div class="card listing-card h-100 position-relative">
             <span class="badge position-absolute top-0 start-0 m-2 status-badge <%= statusClass %>">
               <%= statusText %>
             </span>
@@ -48,9 +48,8 @@
                   <div class="carousel-item <%= idx === 0 ? 'active' : '' %>">
                     <img
                       src="<%= img %>"
-                      class="d-block w-100 img-lightbox-card"
+                      class="d-block w-100 img-lightbox-card listing-card-img"
                       alt="listing_image"
-                      style="height: 15rem; object-fit: cover;"
                       data-images='<%= JSON.stringify(imgListFav) %>'
                       data-index="<%= idx %>"
                       onclick="event.preventDefault(); event.stopPropagation(); window.openImageLightbox(JSON.parse(this.getAttribute('data-images')), <%= idx %>);"
