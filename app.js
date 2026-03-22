@@ -10,6 +10,11 @@ const ejsMate = require("ejs-mate");
 const multer = require("multer");
 const session = require("express-session");
 const bcrypt = require("bcryptjs");
+<<<<<<< HEAD
+=======
+const fs = require("fs");
+
+>>>>>>> f604e34a29241b6cb12208d10ea2aa806994df10
 const mongoUrl = "mongodb://127.0.0.1:27017/wanderlust";
 
 // Multer configuration for image uploads
@@ -49,6 +54,17 @@ app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 app.engine("ejs", ejsMate);
 app.use(express.static(path.join(__dirname, "/public")));
+app.use("/assets", express.static(path.join(__dirname, "assets")));
+const cursorAssetsPath = path.join(
+  process.env.USERPROFILE || "",
+  ".cursor",
+  "projects",
+  "d-Major-Project-Air-BNB",
+  "assets",
+);
+if (fs.existsSync(cursorAssetsPath)) {
+  app.use("/assets", express.static(cursorAssetsPath));
+}
 
 app.use(
   session({
@@ -137,11 +153,9 @@ app.post("/register", async (req, res) => {
         .status(400)
         .render("auth/register.ejs", { error: "Username is required." });
     if (password.length < 4)
-      return res
-        .status(400)
-        .render("auth/register.ejs", {
-          error: "Password must be at least 4 characters.",
-        });
+      return res.status(400).render("auth/register.ejs", {
+        error: "Password must be at least 4 characters.",
+      });
     if (password !== confirmPassword)
       return res
         .status(400)
@@ -150,11 +164,9 @@ app.post("/register", async (req, res) => {
     if (role === "admin") {
       const requiredSecret = process.env.ADMIN_SIGNUP_SECRET || "staybee-admin";
       if (adminSignupSecret !== requiredSecret) {
-        return res
-          .status(400)
-          .render("auth/register.ejs", {
-            error: "Invalid admin secret. Ask your admin for the secret.",
-          });
+        return res.status(400).render("auth/register.ejs", {
+          error: "Invalid admin secret. Ask your admin for the secret.",
+        });
       }
     }
 
@@ -170,11 +182,9 @@ app.post("/register", async (req, res) => {
     res.redirect("/login");
   } catch (err) {
     console.error("Register error:", err);
-    res
-      .status(500)
-      .render("auth/register.ejs", {
-        error: "Something went wrong. Please try again.",
-      });
+    res.status(500).render("auth/register.ejs", {
+      error: "Something went wrong. Please try again.",
+    });
   }
 });
 
@@ -184,11 +194,9 @@ app.post("/login", async (req, res) => {
     const password = req.body?.password || "";
 
     if (!username || !password) {
-      return res
-        .status(400)
-        .render("auth/login.ejs", {
-          error: "Username and password are required.",
-        });
+      return res.status(400).render("auth/login.ejs", {
+        error: "Username and password are required.",
+      });
     }
 
     const user = await User.findOne({ username });
@@ -211,11 +219,9 @@ app.post("/login", async (req, res) => {
     res.redirect("/listings");
   } catch (err) {
     console.error("Login error:", err);
-    res
-      .status(500)
-      .render("auth/login.ejs", {
-        error: "Something went wrong. Please try again.",
-      });
+    res.status(500).render("auth/login.ejs", {
+      error: "Something went wrong. Please try again.",
+    });
   }
 });
 

@@ -1,43 +1,43 @@
-<nav class="navbar navbar-expand-md sticky-top">
+<nav class="navbar staybee-navbar sticky-top">
   <div class="container-fluid px-3 px-md-4">
-    <a class="navbar-brand d-flex align-items-center me-2" href="/">
-      <i class="fa-regular fa-compass me-2"></i>
-      <span class="fw-semibold">StayBee</span>
-    </a>
-    <% if (!hideSearch) { %>
-      <button
-        type="button"
-        class="search-trigger d-none d-md-inline-flex"
-        data-bs-toggle="modal"
-        data-bs-target="#searchModal"
-      >
-        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-        <span>Search</span>
-      </button>
-    <% } %>
-    <button
-      class="navbar-toggler ms-auto"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#navbarNavAltMarkup"
-    >
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-      <div class="navbar-nav ms-md-2 me-auto align-items-md-center gap-md-1">
-        <a class="nav-link" href="/">Home</a>
-        <% if (currentUser) { %>
-          <a class="nav-link" href="/favourites"><i class="fa-regular fa-heart me-1"></i>Favourites</a>
-        <% } %>
-        <% if (currentUser && currentUser.role === "admin") { %>
-          <a class="nav-link" href="/listings/new">Add new Listing</a>
-        <% } %>
+    <div class="staybee-navbar-inner d-flex flex-nowrap align-items-center w-100 gap-2">
+      <a class="navbar-brand d-flex align-items-center flex-shrink-0 me-0" href="<%= currentUser ? '/listings' : '/login' %>">
+        <img
+          src="/assets/c__Users_devwr_AppData_Roaming_Cursor_User_workspaceStorage_83f2c30c62148b47a92b2c5c87264dfa_images_Gemini_Generated_Image_8m1wmn8m1wmn8m1w-removebg-preview-a6919170-ddb1-461b-8e5d-eeb77185c88b.png"
+          alt="StayBee logo"
+          class="navbar-logo-img"
+        />
+      </a>
+
+      <% if (!hideSearch) { %>
+        <button
+          type="button"
+          class="search-trigger staybee-search-desktop d-none d-md-inline-flex flex-shrink-0"
+          data-bs-toggle="modal"
+          data-bs-target="#searchModal"
+        >
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          <span>Search</span>
+        </button>
+      <% } %>
+
+      <div class="staybee-navbar-links flex-grow-1 min-w-0">
+        <nav class="navbar-nav staybee-navbar-nav d-flex flex-row flex-nowrap align-items-center gap-1 gap-md-2">
+          <a class="nav-link staybee-nav-link flex-shrink-0" href="/">Home</a>
+          <% if (currentUser) { %>
+            <a class="nav-link staybee-nav-link flex-shrink-0" href="/favourites"><i class="fa-regular fa-heart me-1"></i>Favourites</a>
+          <% } %>
+          <% if (currentUser && currentUser.role === "admin") { %>
+            <a class="nav-link staybee-nav-link flex-shrink-0" href="/listings/new">Add new Listing</a>
+          <% } %>
+        </nav>
       </div>
-      <div class="d-flex align-items-center gap-2 ms-auto">
+
+      <div class="staybee-navbar-actions d-flex align-items-center gap-2 flex-shrink-0">
         <% if (!hideSearch) { %>
           <button
             type="button"
-            class="search-trigger d-inline-flex d-md-none"
+            class="search-trigger d-inline-flex d-md-none flex-shrink-0"
             data-bs-toggle="modal"
             data-bs-target="#searchModal"
           >
@@ -48,13 +48,13 @@
         <% if (currentUser) { %>
           <button
             type="button"
-            class="btn user-menu-toggle"
+            class="staybee-hamburger-btn"
             data-bs-toggle="offcanvas"
             data-bs-target="#userMenuCanvas"
             aria-controls="userMenuCanvas"
-            aria-label="Open user menu"
+            aria-label="Open account menu"
           >
-            <i class="fa-solid fa-bars"></i>
+            <i class="fa-solid fa-bars" aria-hidden="true"></i>
           </button>
         <% } %>
       </div>
@@ -63,9 +63,16 @@
 </nav>
 
 <% if (currentUser) { %>
-  <div class="offcanvas offcanvas-end user-menu-canvas" tabindex="-1" id="userMenuCanvas" aria-labelledby="userMenuCanvasLabel">
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title" id="userMenuCanvasLabel">Account</h5>
+  <div
+    class="offcanvas offcanvas-end user-menu-canvas"
+    tabindex="-1"
+    id="userMenuCanvas"
+    aria-labelledby="userMenuCanvasLabel"
+    data-bs-scroll="false"
+    data-bs-backdrop="true"
+  >
+    <div class="offcanvas-header border-bottom">
+      <h5 class="offcanvas-title mb-0" id="userMenuCanvasLabel">Account</h5>
       <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
@@ -73,7 +80,7 @@
         <%= currentUser.name %><%= currentUser.role === "admin" ? " (Admin)" : "" %>
       </p>
       <form method="POST" action="/logout" class="menu-logout-form">
-        <button type="submit" class="btn btn-outline-secondary menu-logout-btn">Logout</button>
+        <button type="submit" class="btn btn-outline-secondary menu-logout-btn w-100">Logout</button>
       </form>
     </div>
   </div>
