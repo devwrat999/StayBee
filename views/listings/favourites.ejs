@@ -52,7 +52,6 @@
                       alt="listing_image"
                       data-images='<%= JSON.stringify(imgListFav) %>'
                       data-index="<%= idx %>"
-                      onclick="event.preventDefault(); event.stopPropagation(); window.openImageLightbox(JSON.parse(this.getAttribute('data-images')), <%= idx %>);"
                     />
                   </div>
                 <% }) %>
@@ -120,6 +119,18 @@
     var grid = document.getElementById("favouritesGrid");
     var emptyState = document.getElementById("favouritesEmptyState");
     if (!grid) return;
+
+    grid.querySelectorAll(".img-lightbox-card").forEach(function (imgEl) {
+      imgEl.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var images = JSON.parse(this.getAttribute("data-images") || "[]");
+        var index = parseInt(this.getAttribute("data-index") || "0", 10);
+        if (window.openImageLightbox) {
+          window.openImageLightbox(images, index);
+        }
+      });
+    });
 
     function syncEmptyState() {
       var cards = grid.querySelectorAll("[data-favourite-card]");

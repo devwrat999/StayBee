@@ -77,7 +77,6 @@
                       alt="listing_image"
                       data-images='<%= JSON.stringify(imgList) %>'
                       data-index="<%= idx %>"
-                      onclick="event.preventDefault(); event.stopPropagation(); window.openImageLightbox(JSON.parse(this.getAttribute('data-images')), <%= idx %>);"
                     />
                   </div>
                 <% }) %>
@@ -142,6 +141,18 @@
 
 <script>
   (function () {
+    document.querySelectorAll(".img-lightbox-card").forEach(function (imgEl) {
+      imgEl.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var images = JSON.parse(this.getAttribute("data-images") || "[]");
+        var index = parseInt(this.getAttribute("data-index") || "0", 10);
+        if (window.openImageLightbox) {
+          window.openImageLightbox(images, index);
+        }
+      });
+    });
+
     function updateFavouriteUI(form, isFavourite) {
       form.setAttribute("data-is-favourite", isFavourite ? "true" : "false");
       var btn = form.querySelector(".js-favourite-btn");
