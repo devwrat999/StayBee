@@ -1,13 +1,17 @@
 <% layout("/layouts/boilerplate") %>
 
 <div class="row justify-content-center mt-4">
-  <div class="col-12 col-md-8 col-lg-6">
+  <div class="col-12 col-md-10 col-lg-8">
     <h2 class="mb-3">Edit Your Listing</h2>
+    <% if (typeof error !== "undefined" && error) { %>
+      <div class="alert alert-danger rounded-4 border-0 shadow-sm" role="alert"><%= error %></div>
+    <% } %>
 <form
   method="POST"
   action="/listings/<%= listing._id %>?_method=PUT"
   enctype="multipart/form-data"
   class="p-3 p-md-4 rounded-4 border bg-white shadow-sm"
+  data-staybee-listing-form
 >
   <div class="mb-3">
     <label for="title" class="form-label">Title</label>
@@ -91,14 +95,24 @@
     />
   </div>
   <div class="mb-3">
-    <label for="location" class="form-label">Location</label>
+    <label for="location" class="form-label">Location (short label)</label>
     <input
+      id="location"
       name="listing[location]"
       class="form-control"
       value="<%= listing.location %>"
       type="text"
     />
+    <div class="form-text">Shown in listings; use the map for the exact pin.</div>
   </div>
+
+  <%- include('../includes/map-location-picker', {
+    hasExistingCoords: listing.latitude != null && listing.longitude != null,
+    initialLat: listing.latitude,
+    initialLng: listing.longitude,
+    initialAddress: listing.locationAddress || '',
+    showClearControl: true
+  }) %>
   <div class="mb-3">
     <label for="ownerContact" class="form-label">Owner Contact Number</label>
     <input

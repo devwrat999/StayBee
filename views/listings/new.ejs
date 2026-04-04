@@ -1,8 +1,18 @@
 <% layout("/layouts/boilerplate") %>
 <div class="row justify-content-center mt-4">
-  <div class="col-12 col-md-8 col-lg-6">
+  <div class="col-12 col-md-10 col-lg-8">
     <h2 class="mb-3">Create New Listing</h2>
-    <form method="POST" action="/listings" enctype="multipart/form-data" class="p-3 p-md-4 rounded-4 border bg-white shadow-sm">
+    <% if (typeof error !== "undefined" && error) { %>
+      <div class="alert alert-danger rounded-4 border-0 shadow-sm" role="alert"><%= error %></div>
+    <% } %>
+    <form
+      method="POST"
+      action="/listings"
+      enctype="multipart/form-data"
+      class="p-3 p-md-4 rounded-4 border bg-white shadow-sm"
+      data-staybee-listing-form
+      <% if (googleMapsApiKey) { %>data-require-map-location="true"<% } %>
+    >
       <div class="mb-3">
         <label for="title" class="form-label">Title</label>
         <br />
@@ -62,16 +72,26 @@
       </div>
 
       <div class="mb-3">
-        <label for="location" class="form-label">Location</label>
+        <label for="location" class="form-label">Location (short label)</label>
         <br />
 
         <input
+          id="location"
           name="listing[location]"
-          placeholder="Enter Location"
+          placeholder="e.g. neighbourhood or area name"
           type="text"
           class="form-control"
         />
+        <div class="form-text">Shown in listings; use the map below for the exact pin.</div>
       </div>
+
+      <%- include('../includes/map-location-picker', {
+        hasExistingCoords: false,
+        initialLat: null,
+        initialLng: null,
+        initialAddress: '',
+        showClearControl: false
+      }) %>
       <div class="mb-3">
         <label for="ownerContact" class="form-label">Owner Contact Number</label>
         <input

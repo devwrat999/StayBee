@@ -24,6 +24,14 @@ const listingSchema = new Schema({
   },
   price: Number,
   location: String,
+  /** Full formatted address from Places / geocoder (optional) */
+  locationAddress: {
+    type: String,
+    default: "",
+    trim: true,
+  },
+  latitude: Number,
+  longitude: Number,
   country: String,
   ownerContact: {
     type: String,

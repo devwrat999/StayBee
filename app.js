@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
@@ -67,8 +68,38 @@ app.use(
 app.use((req, res, next) => {
   res.locals.currentUser = req.session?.user || null;
   res.locals.hideSearch = false;
+  res.locals.googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY || "";
   next();
 });
+
+function parseListingGeoFields(listingBody) {
+  if (!listingBody || typeof listingBody !== "object") return {};
+  const latRaw = listingBody.latitude;
+  const lngRaw = listingBody.longitude;
+  const addr = (listingBody.locationAddress || "").trim();
+  const emptyLat =
+    latRaw === undefined ||
+    latRaw === null ||
+    String(latRaw).trim() === "";
+  const emptyLng =
+    lngRaw === undefined ||
+    lngRaw === null ||
+    String(lngRaw).trim() === "";
+  if (emptyLat || emptyLng) {
+    return { hasGeo: false };
+  }
+  const lat = parseFloat(latRaw);
+  const lng = parseFloat(lngRaw);
+  if (Number.isNaN(lat) || Number.isNaN(lng)) {
+    return { hasGeo: false };
+  }
+  return {
+    hasGeo: true,
+    latitude: lat,
+    longitude: lng,
+    locationAddress: addr || undefined,
+  };
+}
 
 const requireLogin = (req, res, next) => {
   if (!req.session?.user) return res.redirect("/login");
@@ -266,7 +297,7 @@ app.get("/listings", async (req, res) => {
 
 // NEW Route
 app.get("/listings/new", requireAdmin, (req, res) => {
-  res.render("listings/new.ejs");
+  res.render("listings/new.ejs", { error: null });
 });
 
 //Show route
@@ -306,7 +337,21 @@ app.post(
   upload.array("images", 10),
   async (req, res) => {
     try {
-      const listingData = req.body.listing || {};
+      const rawListing = req.body.listing || {};
+      const geo = parseListingGeoFields(rawListing);
+      const mapsKey = process.env.GOOGLE_MAPS_API_KEY;
+      if (mapsKey && !geo.hasGeo) {
+        return res.status(400).render("listings/new.ejs", {
+          error:
+            "Please select a precise location on the map (search for an address or tap the map to drop a pin).",
+        });
+      }
+
+      const listingData = { ...rawListing };
+      delete listingData.latitude;
+      delete listingData.longitude;
+      delete listingData.locationAddress;
+
       if (!listingData.status) listingData.status = "Available";
 
       if (req.files && req.files.length > 0) {
@@ -314,6 +359,14 @@ app.post(
         listingData.images = imagePaths;
         // Also set primary image for backward compatibility
         listingData.image = imagePaths[0];
+      }
+
+      if (geo.hasGeo) {
+        listingData.latitude = geo.latitude;
+        listingData.longitude = geo.longitude;
+        if (geo.locationAddress) {
+          listingData.locationAddress = geo.locationAddress;
+        }
       }
 
       const newlisting = new Listing(listingData);
@@ -331,7 +384,7 @@ app.post(
 app.get("/listings/:id/edit", requireAdmin, async (req, res) => {
   let { id } = req.params;
   const listing = await Listing.findById(id);
-  res.render("listings/edit.ejs", { listing });
+  res.render("listings/edit.ejs", { listing, error: null });
 });
 
 //Update route
@@ -342,7 +395,13 @@ app.put(
   async (req, res) => {
     try {
       let { id } = req.params;
-      const updatedData = req.body.listing || {};
+      const rawListing = req.body.listing || {};
+      const geo = parseListingGeoFields(rawListing);
+      const updatedData = { ...rawListing };
+      delete updatedData.latitude;
+      delete updatedData.longitude;
+      delete updatedData.locationAddress;
+
       if (!updatedData.status) updatedData.status = "Available";
       const listing = await Listing.findById(id);
       if (!listing) return res.status(404).send("Listing not found.");
@@ -376,7 +435,16 @@ app.put(
           "https://images.unsplash.com/photo-1519046904884-53103b34b206?q=80&w=1170&auto=format&fit=crop";
       }
 
-      await Listing.findByIdAndUpdate(id, updatedData);
+      const updateDoc = { ...updatedData };
+      if (geo.hasGeo) {
+        updateDoc.latitude = geo.latitude;
+        updateDoc.longitude = geo.longitude;
+        updateDoc.locationAddress = geo.locationAddress || "";
+      } else {
+        updateDoc.$unset = { latitude: 1, longitude: 1, locationAddress: 1 };
+      }
+
+      await Listing.findByIdAndUpdate(id, updateDoc);
       res.redirect(`/listings/${id}`);
     } catch (err) {
       console.error("Error updating listing:", err);

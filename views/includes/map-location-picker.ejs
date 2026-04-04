@@ -1,0 +1,120 @@
+<% 
+  var _hasCoords = typeof hasExistingCoords !== "undefined" && hasExistingCoords;
+  var _centerLat = 20.5937;
+  var _centerLng = 78.9629;
+  var _markerLat = _hasCoords && typeof initialLat !== "undefined" && initialLat != null ? Number(initialLat) : null;
+  var _markerLng = _hasCoords && typeof initialLng !== "undefined" && initialLng != null ? Number(initialLng) : null;
+  var _addr = typeof initialAddress !== "undefined" && initialAddress ? String(initialAddress) : "";
+%>
+<div class="staybee-map-section mb-4" data-staybee-map-section>
+  <% if (googleMapsApiKey) { %>
+  <div class="card staybee-map-panel border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-body p-3 p-md-4">
+      <div class="staybee-map-panel-intro mb-3 mb-md-4">
+        <h3 class="h6 fw-semibold mb-2 text-body">Precise location</h3>
+        <p class="text-muted small mb-0">
+          Tap the map to place the pin, use your current position, or type coordinates. Drag the pin to fine-tune.
+        </p>
+      </div>
+
+      <div class="staybee-map-toolbar d-flex flex-column flex-sm-row flex-wrap align-items-stretch align-items-sm-center justify-content-between gap-2 gap-sm-3 mb-3 mb-md-4">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <button
+            type="button"
+            class="btn btn-outline-secondary staybee-map-toolbar-btn"
+            id="staybeeUseCurrentLocation"
+            title="Use device GPS (requires permission)"
+          >
+            <i class="fa-solid fa-location-crosshairs me-2"></i>Use current location
+          </button>
+          <% if (typeof showClearControl !== "undefined" && showClearControl) { %>
+          <button type="button" class="btn btn-link btn-sm text-secondary text-decoration-none px-2 py-2 staybee-map-clear-link" id="staybeeMapClearLocation">
+            Clear location
+          </button>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="staybee-map-frame rounded-4 border position-relative overflow-hidden mb-3 mb-md-4">
+        <div id="staybeeMapPicker" class="staybee-map-canvas" role="application" aria-label="Interactive map to select listing location"></div>
+        <div id="staybeeMapPickerLoading" class="staybee-map-loading d-flex align-items-center justify-content-center">
+          <div class="text-center px-3 py-4">
+            <div class="spinner-border text-secondary mb-2" role="status" aria-hidden="true"></div>
+            <p class="small text-muted mb-0">Loading map…</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="staybeeMapPickerError" class="alert alert-danger border-0 rounded-3 py-2 px-3 small mb-3 d-none" role="alert"></div>
+
+      <div class="row g-3 staybee-coord-row">
+        <div class="col-12 col-sm-6">
+          <label class="form-label small fw-medium text-muted mb-1" for="listingLatitude">Latitude</label>
+          <input
+            type="text"
+            inputmode="decimal"
+            class="form-control staybee-coord-input"
+            id="listingLatitude"
+            name="listing[latitude]"
+            value="<%= _markerLat != null ? _markerLat : '' %>"
+            placeholder="e.g. 12.9716"
+            autocomplete="off"
+            aria-describedby="staybeeCoordHint"
+          />
+        </div>
+        <div class="col-12 col-sm-6">
+          <label class="form-label small fw-medium text-muted mb-1" for="listingLongitude">Longitude</label>
+          <input
+            type="text"
+            inputmode="decimal"
+            class="form-control staybee-coord-input"
+            id="listingLongitude"
+            name="listing[longitude]"
+            value="<%= _markerLng != null ? _markerLng : '' %>"
+            placeholder="e.g. 77.5946"
+            autocomplete="off"
+            aria-describedby="staybeeCoordHint"
+          />
+        </div>
+      </div>
+      <p id="staybeeCoordHint" class="form-text small mt-2 mb-0 text-muted">
+        Coordinates update when you move the pin. You can edit them manually at any time.
+      </p>
+      <input type="hidden" name="listing[locationAddress]" id="listingLocationAddress" value="<%= _addr %>" />
+    </div>
+  </div>
+  <% } else { %>
+  <div class="alert alert-warning border-0 rounded-4 mb-0 shadow-sm">
+    <strong class="d-block mb-1">Map unavailable</strong>
+    <p class="small mb-2 mb-md-3">
+      Set <code class="small">GOOGLE_MAPS_API_KEY</code> in your environment (see <code class="small">.env.example</code>) and restart the server. Until then, you can enter coordinates manually below.
+    </p>
+    <div class="row g-2">
+      <div class="col-md-6">
+        <label class="form-label small">Latitude (optional)</label>
+        <input type="number" step="any" name="listing[latitude]" class="form-control" placeholder="e.g. 12.97" value="<%= _markerLat != null ? _markerLat : '' %>" />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label small">Longitude (optional)</label>
+        <input type="number" step="any" name="listing[longitude]" class="form-control" placeholder="e.g. 77.59" value="<%= _markerLng != null ? _markerLng : '' %>" />
+      </div>
+    </div>
+    <input type="hidden" name="listing[locationAddress]" value="<%= _addr %>" />
+  </div>
+  <% } %>
+</div>
+
+<% if (googleMapsApiKey) { %>
+<script>
+  window.__STAYBEE_MAP_PICKER__ = {
+    apiKey: <%- JSON.stringify(googleMapsApiKey) %>,
+    centerLat: <%= _centerLat %>,
+    centerLng: <%= _centerLng %>,
+    initialLat: <%= _markerLat != null ? _markerLat : "null" %>,
+    initialLng: <%= _markerLng != null ? _markerLng : "null" %>,
+    initialAddress: <%- JSON.stringify(_addr) %>,
+    hasExistingCoords: <%= _hasCoords ? "true" : "false" %>
+  };
+</script>
+<script src="/js/staybee-maps.js" defer></script>
+<% } %>
