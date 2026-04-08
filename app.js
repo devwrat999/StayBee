@@ -258,7 +258,7 @@ app.post("/logout", (req, res) => {
 
 app.get("/listings", async (req, res) => {
   if (!req.session?.user) return res.redirect("/login");
-  const { minPrice, maxPrice, location, sort } = req.query;
+  const { minPrice, maxPrice, location, sort, lat, lng, radiusKm } = req.query;
 
   const filter = {};
 
@@ -274,10 +274,63 @@ app.get("/listings", async (req, res) => {
     filter.location = { $regex: location, $options: "i" };
   }
 
-  let query = Listing.find(filter);
-  if (sort === "price_asc") query = query.sort({ price: 1 });
-  else if (sort === "price_desc") query = query.sort({ price: -1 });
-  const allListing = await query;
+  const requestLat = lat != null && String(lat).trim() !== "" ? parseFloat(lat) : null;
+  const requestLng = lng != null && String(lng).trim() !== "" ? parseFloat(lng) : null;
+  const useNear = Number.isFinite(requestLat) && Number.isFinite(requestLng);
+  const effectiveRadiusKm =
+    radiusKm != null && String(radiusKm).trim() !== ""
+      ? Math.max(1, Math.min(200, parseFloat(radiusKm)))
+      : 25;
+
+  function haversineKm(lat1, lng1, lat2, lng2) {
+    const toRad = (d) => (d * Math.PI) / 180;
+    const R = 6371; // km
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) *
+        Math.cos(toRad(lat2)) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  let allListing = [];
+  if (useNear) {
+    // Fetch without DB-side geo index; filter/sort in memory.
+    const base = await Listing.find(filter);
+    const withCoords = base
+      .filter((l) => Number.isFinite(l.latitude) && Number.isFinite(l.longitude))
+      .map((l) => ({
+        listing: l,
+        distanceKm: haversineKm(
+          requestLat,
+          requestLng,
+          Number(l.latitude),
+          Number(l.longitude),
+        ),
+      }))
+      .filter((x) => x.distanceKm <= effectiveRadiusKm)
+      .sort((a, b) => a.distanceKm - b.distanceKm);
+
+    if (withCoords.length > 0) {
+      allListing = withCoords.map((x) => x.listing);
+    } else {
+      // If nothing matches (or no coords in DB), fall back to existing behavior.
+      allListing = base;
+      if (sort === "price_asc")
+        allListing.sort((a, b) => (a.price || 0) - (b.price || 0));
+      else if (sort === "price_desc")
+        allListing.sort((a, b) => (b.price || 0) - (a.price || 0));
+    }
+  } else {
+    let query = Listing.find(filter);
+    if (sort === "price_asc") query = query.sort({ price: 1 });
+    else if (sort === "price_desc") query = query.sort({ price: -1 });
+    allListing = await query;
+  }
 
   let userFavouriteIds = [];
   if (req.session?.user?.id) {
@@ -290,6 +343,9 @@ app.get("/listings", async (req, res) => {
     maxPrice: maxPrice || "",
     location: location || "",
     sort: sort || "",
+    lat: useNear ? String(requestLat) : "",
+    lng: useNear ? String(requestLng) : "",
+    radiusKm: useNear ? String(effectiveRadiusKm) : "",
   };
 
   res.render("listings/index", { allListing, filters, userFavouriteIds });
