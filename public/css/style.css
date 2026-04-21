@@ -8,6 +8,17 @@ body {
   color: #222222;
 }
 
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Set height to 100% of the viewport */
+    margin: 0;
+}
+
+main {
+    flex: 1; /* This pushes the footer to the bottom by taking up all available space */
+}
+
 .navbar {
   background-color: #ffffff;
   border-bottom: 1px solid #f0f0f0;
