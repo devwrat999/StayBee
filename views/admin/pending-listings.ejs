@@ -1,0 +1,108 @@
+<% layout("/layouts/boilerplate") %>
+
+<!-- jiya: Admin Pending Listings page for approving user submissions -->
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+  <div>
+    <h3 class="mb-0">Pending Listings</h3>
+    <p class="text-muted mb-0" style="font-size: 0.9rem;">
+      Review and approve listings submitted by users.
+    </p>
+  </div>
+  <div>
+    <a href="/admin/approved-listings" class="btn btn-outline-secondary">
+      <i class="bi bi-check-circle"></i> View Approved History
+    </a>
+  </div>
+</div>
+
+<% if (allListing.length === 0) { %>
+  <div class="alert alert-info mt-4">
+    <h5 class="alert-heading">No pending listings</h5>
+    <p class="mb-0">There are no listings waiting for approval at the moment.</p>
+  </div>
+<% } else { %>
+  <div class="row mt-4">
+    <% allListing.forEach(listing => { %>
+      <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+          <% if (listing.image && listing.image.length > 0) { %>
+            <img src="<%= listing.image %>" class="card-img-top" alt="<%= listing.title %>" style="height: 200px; object-fit: cover;">
+          <% } else { %>
+            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+              <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+            </div>
+          <% } %>
+          
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title"><%= listing.title %></h5>
+            <p class="card-text text-muted small">
+              <i class="bi bi-geo-alt"></i> <%= listing.location %>
+            </p>
+            <p class="card-text"><%= listing.description ? listing.description.substring(0, 100) + '...' : '' %></p>
+            
+            <!-- jiya: Owner information -->
+            <div class="mb-2">
+              <small class="text-muted">
+                <i class="bi bi-person"></i> Submitted by: <%= listing.owner ? listing.owner.username : 'Unknown' %>
+              </small>
+            </div>
+            
+            <!-- jiya: Approval status badge -->
+            <div class="mb-2">
+              <span class="badge bg-warning">Pending Approval</span>
+            </div>
+            
+            <div class="mt-auto">
+              <p class="card-text fw-bold text-primary">
+                $<%= listing.price %> <span class="text-muted fw-normal">/night</span>
+              </p>
+              
+              <div class="btn-group w-100" role="group">
+                <a href="/listings/<%= listing._id %>" class="btn btn-outline-primary btn-sm">
+                  <i class="bi bi-eye"></i> View Details
+                </a>
+                
+                <!-- jiya: Approval actions -->
+                <form action="/admin/listings/<%= listing._id %>/approve" method="POST" class="d-inline">
+                  <button type="submit" class="btn btn-success btn-sm" 
+                          onclick="return confirm('Approve this listing? It will be visible to all users.');">
+                    <i class="bi bi-check-circle"></i> Approve
+                  </button>
+                </form>
+                
+                <form action="/admin/listings/<%= listing._id %>/reject" method="POST" class="d-inline">
+                  <button type="submit" class="btn btn-danger btn-sm"
+                          onclick="return confirm('Reject this listing? The user will need to edit and resubmit.');">
+                    <i class="bi bi-x-circle"></i> Reject
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+
+<!-- jiya: Admin actions guide -->
+<div class="mt-4">
+  <div class="card">
+    <div class="card-header">
+      <h6 class="mb-0">Admin Actions Guide</h6>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <h6><i class="bi bi-check-circle text-success"></i> Approve</h6>
+          <p class="small text-muted">Listing will be published and visible to all users on the main listings page.</p>
+        </div>
+        <div class="col-md-6">
+          <h6><i class="bi bi-x-circle text-danger"></i> Reject</h6>
+          <p class="small text-muted">Listing will be marked as rejected. User can edit and resubmit for approval.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

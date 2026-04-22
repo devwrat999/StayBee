@@ -50,6 +50,29 @@ const listingSchema = new Schema({
   },
   averageRating: { type: Number, default: null },
   reviewCount: { type: Number, default: 0 },
+  // jiya: Owner field to track who created the listing
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  // jiya: Approval status for admin approval system
+  approvalStatus: {
+    type: String,
+    enum: ["pending", "approved", "rejected"],
+    default: "pending",
+  },
+  // jiya: Timestamp for when listing was approved
+  approvedAt: {
+    type: Date,
+    default: null,
+  },
+  // jiya: Admin who approved the listing
+  approvedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
 });
 
 const Listing = mongoose.model("Listing", listingSchema);

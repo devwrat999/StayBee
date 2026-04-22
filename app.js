@@ -113,6 +113,13 @@ const requireAdmin = (req, res, next) => {
   return next();
 };
 
+// jiya: Middleware to check if user owns the listing
+const requireOwnership = (req, res, next) => {
+  if (!req.session?.user) return res.redirect("/login");
+  // jiya: Admins can access all listings, users can only access their own
+  return next();
+};
+
 main()
   .then(() => {
     console.log("connected to DB");
@@ -260,7 +267,13 @@ app.get("/listings", async (req, res) => {
   if (!req.session?.user) return res.redirect("/login");
   const { minPrice, maxPrice, location, sort, lat, lng, radiusKm } = req.query;
 
-  const filter = {};
+  // jiya: Only show approved listings to regular users
+  const filter = { approvalStatus: "approved" };
+  
+  // jiya: Admins can see all listings
+  if (req.session.user.role === "admin") {
+    delete filter.approvalStatus;
+  }
 
   if (minPrice) {
     filter.price = { ...filter.price, $gte: Number(minPrice) };
@@ -351,9 +364,14 @@ app.get("/listings", async (req, res) => {
   res.render("listings/index", { allListing, filters, userFavouriteIds });
 });
 
-// NEW Route
-app.get("/listings/new", requireAdmin, (req, res) => {
+// jiya: User NEW Route - for creating listings (pending approval)
+app.get("/listings/new", requireLogin, (req, res) => {
   res.render("listings/new.ejs", { error: null });
+});
+
+// jiya: Admin NEW Route - disabled for admins as requested
+app.get("/admin/listings/new", requireAdmin, (req, res) => {
+  res.status(403).send("Admins cannot create listings directly. Users create listings for approval.");
 });
 
 //Show route
@@ -387,9 +405,10 @@ app.get("/listings/:id", async (req, res) => {
   });
 });
 
+// jiya: User listing creation route (requires approval)
 app.post(
   "/listings",
-  requireAdmin,
+  requireLogin,
   upload.array("images", 10),
   async (req, res) => {
     try {
@@ -410,6 +429,10 @@ app.post(
 
       if (!listingData.status) listingData.status = "Available";
 
+      // jiya: Set owner and approval status
+      listingData.owner = req.session.user.id;
+      listingData.approvalStatus = "pending";
+
       if (req.files && req.files.length > 0) {
         const imagePaths = req.files.map((file) => `/uploads/${file.filename}`);
         listingData.images = imagePaths;
@@ -427,7 +450,7 @@ app.post(
 
       const newlisting = new Listing(listingData);
       await newlisting.save();
-      res.redirect("/listings");
+      res.redirect("/my-listings");
     } catch (err) {
       console.error("Error creating listing:", err);
       res.status(500).send("Error creating listing. Please try again.");
@@ -435,22 +458,55 @@ app.post(
   },
 );
 
-//Edit
+// jiya: Admin listing creation route - disabled
+app.post(
+  "/admin/listings",
+  requireAdmin,
+  upload.array("images", 10),
+  async (req, res) => {
+    res.status(403).send("Admins cannot create listings directly. Users create listings for approval.");
+  },
+);
 
-app.get("/listings/:id/edit", requireAdmin, async (req, res) => {
+// jiya: Edit route - allows users to edit their own listings
+app.get("/listings/:id/edit", requireOwnership, async (req, res) => {
   let { id } = req.params;
   const listing = await Listing.findById(id);
+  
+  if (!listing) {
+    return res.status(404).send("Listing not found.");
+  }
+
+  // jiya: Check if user owns the listing or is admin
+  if (req.session.user.role !== "admin" && listing.owner.toString() !== req.session.user.id) {
+    return res.status(403).send("You can only edit your own listings.");
+  }
+
   res.render("listings/edit.ejs", { listing, error: null });
 });
 
-//Update route
+// jiya: Admin edit route - disabled
+app.get("/admin/listings/:id/edit", requireAdmin, async (req, res) => {
+  res.status(403).send("Admins cannot edit listings directly. Users edit their own listings.");
+});
+
+// jiya: Update route - allows users to update their own listings
 app.put(
   "/listings/:id",
-  requireAdmin,
+  requireOwnership,
   upload.array("images", 10),
   async (req, res) => {
     try {
       let { id } = req.params;
+      const listing = await Listing.findById(id);
+      
+      if (!listing) return res.status(404).send("Listing not found.");
+
+      // jiya: Check if user owns the listing or is admin
+      if (req.session.user.role !== "admin" && listing.owner.toString() !== req.session.user.id) {
+        return res.status(403).send("You can only update your own listings.");
+      }
+
       const rawListing = req.body.listing || {};
       const geo = parseListingGeoFields(rawListing);
       const updatedData = { ...rawListing };
@@ -459,8 +515,6 @@ app.put(
       delete updatedData.locationAddress;
 
       if (!updatedData.status) updatedData.status = "Available";
-      const listing = await Listing.findById(id);
-      if (!listing) return res.status(404).send("Listing not found.");
 
       const deleteImagesRaw = req.body.deleteImages;
       const deleteImages = Array.isArray(deleteImagesRaw)
@@ -500,6 +554,11 @@ app.put(
         updateDoc.$unset = { latitude: 1, longitude: 1, locationAddress: 1 };
       }
 
+      // jiya: Reset approval status if listing was edited and not yet approved
+      if (listing.approvalStatus === "pending") {
+        updateDoc.approvalStatus = "pending";
+      }
+
       await Listing.findByIdAndUpdate(id, updateDoc);
       res.redirect(`/listings/${id}`);
     } catch (err) {
@@ -509,12 +568,125 @@ app.put(
   },
 );
 
-// DELETE ROUTE
-app.delete("/listings/:id", requireAdmin, async (req, res) => {
+// jiya: Admin update route - disabled
+app.put(
+  "/admin/listings/:id",
+  requireAdmin,
+  upload.array("images", 10),
+  async (req, res) => {
+    res.status(403).send("Admins cannot update listings directly. Users update their own listings.");
+  },
+);
+
+// jiya: DELETE ROUTE - allows users to delete their own listings
+app.delete("/listings/:id", requireOwnership, async (req, res) => {
   let { id } = req.params;
+  const listing = await Listing.findById(id);
+  
+  if (!listing) {
+    return res.status(404).send("Listing not found.");
+  }
+
+  // jiya: Check if user owns the listing or is admin
+  if (req.session.user.role !== "admin" && listing.owner.toString() !== req.session.user.id) {
+    return res.status(403).send("You can only delete your own listings.");
+  }
+
   let deletedListing = await Listing.findByIdAndDelete(id);
   console.log(deletedListing);
-  res.redirect("/listings");
+  
+  // jiya: Redirect to appropriate page based on user role
+  if (req.session.user.role === "admin") {
+    res.redirect("/admin/pending-listings");
+  } else {
+    res.redirect("/my-listings");
+  }
+});
+
+// jiya: Admin delete route - disabled
+app.delete("/admin/listings/:id", requireAdmin, async (req, res) => {
+  res.status(403).send("Admins cannot delete listings directly. Users delete their own listings.");
+});
+
+// jiya: My Listings route - shows user's own listings
+app.get("/my-listings", requireLogin, async (req, res) => {
+  const userId = req.session.user.id;
+  const userListings = await Listing.find({ owner: userId })
+    .sort({ createdAt: -1 })
+    .populate("owner", "username");
+  
+  res.render("listings/my-listings.ejs", { allListing: userListings });
+});
+
+// jiya: Admin pending listings route
+app.get("/admin/pending-listings", requireAdmin, async (req, res) => {
+  const pendingListings = await Listing.find({ approvalStatus: "pending" })
+    .sort({ createdAt: -1 })
+    .populate("owner", "username");
+  
+  res.render("admin/pending-listings.ejs", { allListing: pendingListings });
+});
+
+// jiya: Admin approved listings history
+app.get("/admin/approved-listings", requireAdmin, async (req, res) => {
+  const approvedListings = await Listing.find({ approvalStatus: "approved" })
+    .sort({ approvedAt: -1 })
+    .populate("owner", "username")
+    .populate("approvedBy", "username");
+  
+  res.render("admin/approved-listings.ejs", { allListing: approvedListings });
+});
+
+// jiya: Admin approve listing route
+app.post("/admin/listings/:id/approve", requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const listing = await Listing.findById(id);
+    
+    if (!listing) {
+      return res.status(404).send("Listing not found.");
+    }
+    
+    if (listing.approvalStatus !== "pending") {
+      return res.status(400).send("Listing is not pending approval.");
+    }
+    
+    await Listing.findByIdAndUpdate(id, {
+      approvalStatus: "approved",
+      approvedAt: new Date(),
+      approvedBy: req.session.user.id
+    });
+    
+    res.redirect("/admin/pending-listings");
+  } catch (err) {
+    console.error("Error approving listing:", err);
+    res.status(500).send("Error approving listing.");
+  }
+});
+
+// jiya: Admin reject listing route
+app.post("/admin/listings/:id/reject", requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const listing = await Listing.findById(id);
+    
+    if (!listing) {
+      return res.status(404).send("Listing not found.");
+    }
+    
+    if (listing.approvalStatus !== "pending") {
+      return res.status(400).send("Listing is not pending approval.");
+    }
+    
+    await Listing.findByIdAndUpdate(id, {
+      approvalStatus: "rejected"
+    });
+    
+    res.redirect("/admin/pending-listings");
+  } catch (err) {
+    console.error("Error rejecting listing:", err);
+    res.status(500).send("Error rejecting listing.");
+  }
 });
 
 // FAVOURITES (WISHLIST)
