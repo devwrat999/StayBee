@@ -27,10 +27,28 @@
       <div class="col-md-6 col-lg-4 mb-4">
         <div class="card h-100">
           <% if (listing.image && listing.image.length > 0) { %>
-            <img src="<%= listing.image %>" class="card-img-top" alt="<%= listing.title %>" style="height: 200px; object-fit: cover;">
+            <div class="carousel-inner">
+              <% const hasImages = listing.images && listing.images.length > 0; %>
+              <% const imgList = hasImages ? listing.images : [listing.image]; %>
+              <% imgList.forEach(function (img, idx) { %>
+                <div class="carousel-item <%= idx === 0 ? 'active' : '' %>">
+                  <img
+                    src="<%= img %>"
+                    class="d-block w-100 img-lightbox-card listing-card-img"
+                    alt="listing_image"
+                    data-images='<%= JSON.stringify(imgList) %>'
+                    data-index="<%= idx %>"
+                  />
+                </div>
+              <% }) %>
+            </div>
           <% } else { %>
-            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-              <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+            <div class="carousel-inner">
+              <div class="carousel-item active">
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                  <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                </div>
+              </div>
             </div>
           <% } %>
           
