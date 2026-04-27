@@ -122,7 +122,16 @@
               >
                 <button
                   type="submit"
-                  class="btn btn-sm btn-light rounded-circle p-2 shadow-sm js-favourite-btn"
+                  class="btn btn-sm btn-light rounded-circle p-2 shadow-sm js-favourite-btn d-flex d-md-none align-items-center justify-content-center"
+                  style="width: 40px; height: 40px;"
+                  onclick="event.stopPropagation();"
+                  title="<%= isFav ? 'Remove from favourites' : 'Add to favourites' %>"
+                >
+                  <i class="fa-<%= isFav ? 'solid' : 'regular' %> fa-heart <%= isFav ? 'text-danger' : '' %> js-favourite-icon fs-5"></i>
+                </button>
+                <button
+                  type="submit"
+                  class="btn btn-sm btn-light rounded-circle p-2 shadow-sm js-favourite-btn d-none d-md-flex align-items-center justify-content-center"
                   onclick="event.stopPropagation();"
                   title="<%= isFav ? 'Remove from favourites' : 'Add to favourites' %>"
                 >
