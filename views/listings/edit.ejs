@@ -145,7 +145,11 @@
   </div>
 
   <div class="d-grid mt-3">
-    <button type="submit" class="btn btn-primary btn-lg fw-semibold">Save Changes</button>
+    <% if (listing.approvalStatus === 'rejected') { %>
+      <button type="submit" class="btn btn-warning btn-lg fw-semibold">Re-submit for Approval</button>
+    <% } else { %>
+      <button type="submit" class="btn btn-primary btn-lg fw-semibold">Save Changes</button>
+    <% } %>
   </div>
 </form>
   </div>

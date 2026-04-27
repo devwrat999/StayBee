@@ -555,8 +555,10 @@ app.put(
       }
 
       // jiya: Reset approval status if listing was edited and not yet approved
-      if (listing.approvalStatus === "pending") {
+      if (listing.approvalStatus === "pending" || listing.approvalStatus === "rejected") {
         updateDoc.approvalStatus = "pending";
+        updateDoc.approvedAt = null;
+        updateDoc.approvedBy = null;
       }
 
       await Listing.findByIdAndUpdate(id, updateDoc);
@@ -620,9 +622,33 @@ app.get("/my-listings", requireLogin, async (req, res) => {
 
 // jiya: Admin pending listings route
 app.get("/admin/pending-listings", requireAdmin, async (req, res) => {
-  const pendingListings = await Listing.find({ approvalStatus: "pending" })
+  // jiya: Handle potential data inconsistency - try multiple approaches
+  let pendingListings = await Listing.find({ approvalStatus: "pending" })
     .sort({ createdAt: -1 })
     .populate("owner", "username");
+  
+  // jiya: If no results, try without populate first
+  if (pendingListings.length === 0) {
+    const pendingWithoutPopulate = await Listing.find({ approvalStatus: "pending" })
+      .sort({ createdAt: -1 });
+    
+    // jiya: Try to populate only those that have an owner
+    pendingListings = [];
+    for (const listing of pendingWithoutPopulate) {
+      if (listing.owner) {
+        try {
+          const populated = await Listing.findById(listing._id).populate("owner", "username");
+          pendingListings.push(populated);
+        } catch (err) {
+          // jiya: If populate fails, add without owner
+          pendingListings.push(listing);
+        }
+      } else {
+        // jiya: Add listings without owner
+        pendingListings.push(listing);
+      }
+    }
+  }
   
   res.render("admin/pending-listings.ejs", { allListing: pendingListings });
 });
@@ -635,6 +661,15 @@ app.get("/admin/approved-listings", requireAdmin, async (req, res) => {
     .populate("approvedBy", "username");
   
   res.render("admin/approved-listings.ejs", { allListing: approvedListings });
+});
+
+// jiya: Admin rejected listings route
+app.get("/admin/rejected-listings", requireAdmin, async (req, res) => {
+  const rejectedListings = await Listing.find({ approvalStatus: "rejected" })
+    .sort({ createdAt: -1 })
+    .populate("owner", "username");
+  
+  res.render("admin/rejected-listings.ejs", { allListing: rejectedListings });
 });
 
 // jiya: Admin approve listing route

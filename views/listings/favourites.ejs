@@ -92,9 +92,9 @@
       </div>
     <% }); %>
   <% } else { %>
-    <div class="col-12" id="favouritesEmptyState">
+    <div class="col-12 d-flex justify-content-center align-items-center min-vh-100" id="favouritesEmptyState">
       <div class="text-center py-5 text-muted">
-        <i class="fa-regular fa-heart fa-3x mb-3 d-block"></i>
+        <i class="fa-regular fa-heart fa-3x mb-3"></i>
         <p class="mb-0">No favourites yet.</p>
         <p class="small">Browse listings and click "Add to favourites" to save rooms you like.</p>
         <a href="/listings" class="btn btn-primary mt-3">Explore Listings</a>
@@ -104,9 +104,9 @@
 </div>
 
 <% if (allListing && allListing.length > 0) { %>
-  <div class="col-12 d-none" id="favouritesEmptyState">
+  <div class="col-12 d-none d-flex justify-content-center align-items-center min-vh-100" id="favouritesEmptyState">
     <div class="text-center py-5 text-muted">
-      <i class="fa-regular fa-heart fa-3x mb-3 d-block"></i>
+      <i class="fa-regular fa-heart fa-3x mb-3"></i>
       <p class="mb-0">No favourites yet.</p>
       <p class="small">Browse listings and click "Add to favourites" to save rooms you like.</p>
       <a href="/listings" class="btn btn-primary mt-3">Explore Listings</a>

@@ -11,8 +11,52 @@
   </div>
   <div>
     <a href="/admin/pending-listings" class="btn btn-primary">
-      <i class="bi bi-clock"></i> View Pending ( <%= allListing.length > 0 ? '' : '0' %> )
+      <i class="bi bi-clock"></i> View Pending
     </a>
+  </div>
+</div>
+
+<!-- jiya: Statistics -->
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="alert alert-info border-0 bg-gradient">
+      <div class="row align-items-center">
+        <div class="col-md-3 col-6 text-center mb-3 mb-md-0">
+          <div class="d-flex align-items-center justify-content-center mb-2">
+            <i class="bi bi-check-circle-fill text-primary me-2"></i>
+            <span class="badge bg-primary fs-6 px-3 py-2"><%= allListing.length %></span>
+          </div>
+          <p class="small mb-0 fw-semibold">Total Approved</p>
+        </div>
+        <div class="col-md-3 col-6 text-center mb-3 mb-md-0">
+          <div class="d-flex align-items-center justify-content-center mb-2">
+            <i class="bi bi-star-fill text-warning me-2"></i>
+            <span class="badge bg-warning text-dark fs-6 px-3 py-2">
+              <%= allListing.filter(l => l.averageRating && l.averageRating >= 4).length %>
+            </span>
+          </div>
+          <p class="small mb-0 fw-semibold">Highly Rated (4+ ⭐)</p>
+        </div>
+        <div class="col-md-3 col-6 text-center mb-3 mb-md-0">
+          <div class="d-flex align-items-center justify-content-center mb-2">
+            <i class="bi bi-house-check-fill text-info me-2"></i>
+            <span class="badge bg-info fs-6 px-3 py-2">
+              <%= allListing.filter(l => l.status === 'Available').length %>
+            </span>
+          </div>
+          <p class="small mb-0 fw-semibold">Available</p>
+        </div>
+        <div class="col-md-3 col-6 text-center">
+          <div class="d-flex align-items-center justify-content-center mb-2">
+            <i class="bi bi-graph-up text-success me-2"></i>
+            <span class="badge bg-success fs-6 px-3 py-2">
+              <%= allListing.length > 0 ? Math.round((allListing.filter(l => l.status === 'Available').length / allListing.length) * 100) : 0 %>%
+            </span>
+          </div>
+          <p class="small mb-0 fw-semibold">Availability Rate</p>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -90,31 +134,3 @@
   </div>
 <% } %>
 
-<!-- jiya: Statistics -->
-<div class="mt-4">
-  <div class="card">
-    <div class="card-header">
-      <h6 class="mb-0">Approval Statistics</h6>
-    </div>
-    <div class="card-body">
-      <div class="row text-center">
-        <div class="col-md-4">
-          <h4 class="text-primary"><%= allListing.length %></h4>
-          <p class="small text-muted mb-0">Total Approved</p>
-        </div>
-        <div class="col-md-4">
-          <h4 class="text-success">
-            <%= allListing.filter(l => l.averageRating && l.averageRating >= 4).length %>
-          </h4>
-          <p class="small text-muted mb-0">Highly Rated (4+ stars)</p>
-        </div>
-        <div class="col-md-4">
-          <h4 class="text-info">
-            <%= allListing.filter(l => l.status === 'Available').length %>
-          </h4>
-          <p class="small text-muted mb-0">Currently Available</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
