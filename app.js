@@ -267,13 +267,8 @@ app.get("/listings", async (req, res) => {
   if (!req.session?.user) return res.redirect("/login");
   const { minPrice, maxPrice, location, sort, lat, lng, radiusKm } = req.query;
 
-  // jiya: Only show approved listings to regular users
+  // jiya: Only show approved listings to all users (including admins)
   const filter = { approvalStatus: "approved" };
-  
-  // jiya: Admins can see all listings
-  if (req.session.user.role === "admin") {
-    delete filter.approvalStatus;
-  }
 
   if (minPrice) {
     filter.price = { ...filter.price, $gte: Number(minPrice) };
